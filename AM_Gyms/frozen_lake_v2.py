@@ -199,9 +199,6 @@ class FrozenLakeEnv_v2(Env):
         else:
             return int(self.s), {"prob": 1}
     
-    def set_state(self,s):
-        self.s = s
-    
     def getname(self):
         if self.is_slippery:
             variant_name = "semi-slippery"

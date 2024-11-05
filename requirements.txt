@@ -5,5 +5,3 @@ matplotlib
 future
 h5py
 pytest
-cvxpy[GLPK]
-pygame

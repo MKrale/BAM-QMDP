@@ -31,7 +31,7 @@ def ucb_action(mcts, current_node, greedy, filterUnder = 0):
             best_q_value = current_q
             # best actions is a list of Discrete Actions
             best_actions.append(action_entry.get_action())
-    assert best_actions.__len__() != 0
+    assert best_actions.__len__() is not 0
     
     # Break ties with mean:
     # if best_actions.__len__() > 1:
@@ -84,6 +84,6 @@ def e_greedy(current_node, epsilon):
                 # best actions is a list of Discrete Actions
                 best_actions.append(action_entry.get_action())
 
-        assert best_actions.__len__() != 0
+        assert best_actions.__len__() is not 0
 
         return random.choice(best_actions)

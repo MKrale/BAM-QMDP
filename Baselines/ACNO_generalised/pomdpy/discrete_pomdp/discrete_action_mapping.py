@@ -181,7 +181,7 @@ class DiscreteActionMappingEntry(ActionMappingEntry):
         if not self.is_legal:
             if legal:
                 self.is_legal = True
-                if self.visit_count == 0:
+                if self.visit_count is 0:
                     self.map.bin_sequence.add(self.bin_number)
         else:
             if not self.is_legal:

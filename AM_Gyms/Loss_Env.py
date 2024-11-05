@@ -44,7 +44,7 @@ class Measure_Loss_Env(gym.Env):
                     next_state = 1
                 else:
                     next_state = 2
-            elif self.state == 1:
+            if self.state == 1:
                 next_state = 3
                 done = True
                 reward = self.r

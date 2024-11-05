@@ -5,13 +5,13 @@ import numpy as np
 class AMRL_Agent:
     '''Creates a AMRL-Agent, as described in https://arxiv.org/abs/2005.12697'''
 
-    def __init__(self,env, eta=0.1, m_bias = 0.1, turn_greedy=True, greedy_perc = 0.9):
+    def __init__(self,env, epsilon=0.1, m_bias = 0.1, turn_greedy=True, greedy_perc = 0.9):
         #load all environment-specific variables
         self.env = env
         self.StateSize, self.ActionSize, self.measureCost, self.s_init = env.get_vars()
 
         #load all algo-specific vars (if provided)
-        self.eta, self.m_bias = eta, m_bias
+        self.epsilon, self.m_bias = epsilon, m_bias
         self.greedy_perc, self.turn_greedy = greedy_perc, turn_greedy
         self.be_greedy = False
         self.MeasureSize = 2
@@ -95,7 +95,7 @@ class AMRL_Agent:
         done = False
         while not done:
             # Chose and take step:
-            if np.random.random(1) < 1-self.eta or self.be_greedy :
+            if np.random.random(1) < 1-self.epsilon or self.be_greedy :
                 (action,measure) = self.find_optimal_actionPair(s_current) #Choose optimal action
             else:
                 (action,measure) = self.find_nonOptimal_actionPair(s_current) #choose non-optimal action
@@ -110,7 +110,7 @@ class AMRL_Agent:
                 self.measurements_taken += 1
                 s_next = obs
             else:
-                (reward, done) = self.env.step_no_measure(action)
+                (reward, done) = self.env.step(action)
                 s_next = self.guess_current_State(s_current, action)
             
             self.update_QTable(s_current,action,measure,s_next, reward, done)

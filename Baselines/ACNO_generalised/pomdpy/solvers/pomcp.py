@@ -35,7 +35,7 @@ class POMCP(BeliefTreeSolver):
 
         for N in range(POMCP.UCB_N):
             for n in range(POMCP.UCB_n):
-                if n == 0:
+                if n is 0:
                     self.fast_UCB[N][n] = np.inf
                 else:
                     self.fast_UCB[N][n] = agent.model.ucb_coefficient * np.sqrt(old_div(np.log(N + 1), n))

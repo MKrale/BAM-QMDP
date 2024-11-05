@@ -49,6 +49,9 @@ class NChainEnv(gym.Env):
         elif self.state < self.n - 1:  # 'forwards': go up along the chain
             reward = 0
             self.state += 1
+        else:  # 'forwards': stay at the end of the chain, collect large reward
+            reward = self.large
+            done = True
         return self.state, reward-self.penalty, done, {}
 
     def reset(self):

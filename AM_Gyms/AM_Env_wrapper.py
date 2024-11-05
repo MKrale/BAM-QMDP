@@ -11,7 +11,7 @@ class AM_ENV():
     and adds a seperate observe-function.
     """
 
-    def __init__(self, env, StateSize, ActionSize, MeasureCost, s_init, log_choices = False, max_steps = np.inf, max_reward = 1):
+    def __init__(self, env, StateSize, ActionSize, MeasureCost, s_init, log_choices = False, max_steps = 10_000, max_reward = 1):
         self.env = env
         self.StateSize = StateSize
         self.ActionSize = ActionSize    # Is there any way to get these two from the env. itself?
@@ -69,9 +69,6 @@ class AM_ENV():
     def getname(self):
         return self.env.getname()
     
-    def set_state(self,s):
-        self.env.set_state(s)
-    
     def horizon(self):
         return None
 
@@ -110,7 +107,7 @@ class AM_Visualiser(): # Assuming a grid!
         return 
 
     def __action_to_symbol__(self, action):
-        if action == 0: return '<'
+        if action == 0  : return '<'
         elif action == 1: return '.'
         elif action == 2: return '>'
         elif action == 3: return '^'
@@ -148,7 +145,7 @@ class AM_Visualiser(): # Assuming a grid!
         choice      = np.vectorize(self.__action_to_symbol__)(choice)
         
         choice      = choice.reshape(self.gridSize, self.gridSize)
-        # print(self.density)
+        print(self.density)
         density     = self.density / np.max([np.max(self.density),1])
         density     = density.reshape(self.gridSize, self.gridSize)
 

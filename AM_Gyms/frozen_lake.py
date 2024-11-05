@@ -50,7 +50,7 @@ def is_valid(board: List[List[str]], max_size: int) -> bool:
     return False
 
 
-def generate_random_map(size: int = 8, p: float = 0.8, seed = None) -> List[str]:
+def generate_random_map(size: int = 8, p: float = 0.8) -> List[str]:
     """Generates a random valid map (one that has a path from start to goal)
     Args:
         size: size of each side of the grid
@@ -63,7 +63,6 @@ def generate_random_map(size: int = 8, p: float = 0.8, seed = None) -> List[str]
 
     while not valid:
         p = min(1, p)
-        np.random.seed(seed)
         board = np.random.choice(["F", "H"], (size, size), p=[p, 1 - p])
         board[0][0] = "S"
         board[-1][-1] = "G"
