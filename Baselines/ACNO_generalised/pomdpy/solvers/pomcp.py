@@ -38,7 +38,9 @@ class POMCP(BeliefTreeSolver):
                 if n is 0:
                     self.fast_UCB[N][n] = np.inf
                 else:
-                    self.fast_UCB[N][n] = agent.model.ucb_coefficient * np.sqrt(old_div(np.log(N + 1), n))
+                    self.fast_UCB[N][n] = agent.model.ucb_coefficient * np.sqrt(
+                        old_div(np.log(N + 1), n)
+                    )
 
     @staticmethod
     def reset(agent):
@@ -59,13 +61,20 @@ class POMCP(BeliefTreeSolver):
         :return:
         """
         assert self.fast_UCB is not None
-        if total_visit_count < POMCP.UCB_N and action_map_entry_visit_count < POMCP.UCB_n:
-            return self.fast_UCB[int(total_visit_count)][int(action_map_entry_visit_count)]
+        if (
+            total_visit_count < POMCP.UCB_N
+            and action_map_entry_visit_count < POMCP.UCB_n
+        ):
+            return self.fast_UCB[int(total_visit_count)][
+                int(action_map_entry_visit_count)
+            ]
 
         if action_map_entry_visit_count == 0:
             return np.inf
         else:
-            return self.model.ucb_coefficient * np.sqrt(old_div(log_n, action_map_entry_visit_count))
+            return self.model.ucb_coefficient * np.sqrt(
+                old_div(log_n, action_map_entry_visit_count)
+            )
 
     def select_eps_greedy_action(self, eps, start_time, greedy_select=False):
         """
@@ -76,15 +85,15 @@ class POMCP(BeliefTreeSolver):
             self.rollout_search(self.belief_tree_index)
         else:
             self.monte_carlo_approx(eps, start_time)
-        
+
         actions = list(self.belief_tree_index.action_map.entries.values())
         act_vals = np.zeros((len(actions),))
         nmbr_actions = np.size(act_vals)
-        
+
         for i in range(len(actions)):
             idx = actions[i].get_action().bin_number
             act_vals[int(idx)] = actions[i].mean_q_value
-       
+
         particles = self.belief_tree_index.state_particles
         p = []
         for i in range(len(particles)):
@@ -92,12 +101,12 @@ class POMCP(BeliefTreeSolver):
         p = np.array(p)
         p = np.expand_dims(p, axis=0)
         act_vals = np.expand_dims(act_vals, axis=0)
-        
+
         # this always selects greedy (no epsilon)
-        acts =  ucb_action(self, self.belief_tree_index, True) 
+        acts = ucb_action(self, self.belief_tree_index, True)
         if greedy_select:
             if np.random.random() < eps:
-                acts.bin_number = np.random.choice(nmbr_actions) # of 16 action choices
+                acts.bin_number = np.random.choice(nmbr_actions)  # of 16 action choices
         return acts
 
     def simulate(self, belief_node, eps, start_time):
@@ -124,39 +133,47 @@ class POMCP(BeliefTreeSolver):
 
         step_result, is_legal = self.model.generate_step(state, action)
         child_belief_node = belief_node.child(action, step_result.observation)
-        
-        if child_belief_node is None and not step_result.is_terminal and belief_node.action_map.total_visit_count > 0:
-            child_belief_node, added = belief_node.create_or_get_child(action, step_result.observation)
+
+        if (
+            child_belief_node is None
+            and not step_result.is_terminal
+            and belief_node.action_map.total_visit_count > 0
+        ):
+            child_belief_node, added = belief_node.create_or_get_child(
+                action, step_result.observation
+            )
 
         if not step_result.is_terminal or not is_legal:
             tree_depth += 1
             if child_belief_node is not None:
                 # Add S' to the new belief node
                 # Add a state particle with the new state
-                if child_belief_node.state_particles.__len__() < self.model.max_particle_count:
+                if (
+                    child_belief_node.state_particles.__len__()
+                    < self.model.max_particle_count
+                ):
                     child_belief_node.state_particles.append(step_result.next_state)
 
-                delayed_reward = self.traverse(child_belief_node, tree_depth, start_time)    
+                delayed_reward = self.traverse(
+                    child_belief_node, tree_depth, start_time
+                )
             else:
                 delayed_reward = self.rollout(belief_node)
             tree_depth -= 1
         else:
             console(4, module, "Reached terminal state.")
             delayed_reward = 0
-            
-
 
         # delayed_reward is "Q maximal"
         # current_q_value is the Q value of the current belief-action pair
-        
-        
+
         action_mapping_entry = belief_node.action_map.get_entry(action.bin_number)
-        
+
         # if best_delayed_reward != 0 :
         #     print ("IN TRAVERSE: q = {}, for action = {}".format(best_delayed_reward, action.bin_number) )
 
         # off-policy Q learning update rule
-        q_value = (step_result.reward + (self.model.discount * delayed_reward)) 
+        q_value = step_result.reward + (self.model.discount * delayed_reward)
 
         action_mapping_entry.update_visit_count(1)
         action_mapping_entry.update_q_value(q_value)

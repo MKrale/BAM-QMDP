@@ -5,10 +5,11 @@ import numpy as np
 
 class DiscreteActionPool(ActionPool):
     """
-     * An abstract implementation of the ActionPool interface that considers actions in terms of
-     * discrete bins.
-     *
+    * An abstract implementation of the ActionPool interface that considers actions in terms of
+    * discrete bins.
+    *
     """
+
     def __init__(self, model):
         """
         :param model:
@@ -17,7 +18,12 @@ class DiscreteActionPool(ActionPool):
         self.preferedOver = model.CActionSize
 
     def create_action_mapping(self, belief_node):
-        return DiscreteActionMapping(belief_node, self, self.create_bin_sequence(belief_node), preferedOver=self.preferedOver)
+        return DiscreteActionMapping(
+            belief_node,
+            self,
+            self.create_bin_sequence(belief_node),
+            preferedOver=self.preferedOver,
+        )
 
     def sample_an_action(self, bin_number):
         return self.all_actions[bin_number]

@@ -8,17 +8,17 @@ from gym import spaces
 import gym
 
 
-
 class SepsisEnv_Or(gym.Env):
-    def __init__(self,
-                obs_cost=0, # turn this off (since obs cost added from examples/sepsis)
-                noise=False,
-                per_step_reward=False,
-                counter=False,
-                locf=False,
-                no_missingness=False,
-                action_aug=False,
-                ):
+    def __init__(
+        self,
+        obs_cost=0,  # turn this off (since obs cost added from examples/sepsis)
+        noise=False,
+        per_step_reward=False,
+        counter=False,
+        locf=False,
+        no_missingness=False,
+        action_aug=False,
+    ):
         self.timestep = 0
         self.max_t = 5
         self.env = None
@@ -33,7 +33,7 @@ class SepsisEnv_Or(gym.Env):
         high = np.array([3, 3, 2, 5, 1, 1, 1])
         low = np.array([0, 0, 0, 0, 0, 0, 0])
         self.observation_space = spaces.Box(low, high)
-        
+
         self.state = None
         self.obs = None
 
@@ -55,18 +55,25 @@ class SepsisEnv_Or(gym.Env):
         if self.counter:
             self.obs[-1] += 1
         else:
-            self.obs = np.concatenate((np.zeros(4,), state[-3:]))
+            self.obs = np.concatenate(
+                (
+                    np.zeros(
+                        4,
+                    ),
+                    state[-3:],
+                )
+            )
         state_idx = self.env.state.get_state_idx()
         return state_idx, reward, done, {}
 
-    def reset(self, init_idx = 256):
+    def reset(self, init_idx=256):
         self.timestep = 0
-        self.env = MDP(init_state_idx=init_idx, 
-                        init_state_idx_type='obs', 
-                        p_diabetes=0.)
+        self.env = MDP(
+            init_state_idx=init_idx, init_state_idx_type="obs", p_diabetes=0.0
+        )
         state = self.env.state.get_state_vector()
         state_idx = self.env.state.get_state_idx()
-        #print(state_idx)
+        # print(state_idx)
         # Add +1 to every vital value since 0 is used for NULL
         state[:4] += 1
         self.state = state.copy()
@@ -75,8 +82,8 @@ class SepsisEnv_Or(gym.Env):
             self.obs = np.concatenate((self.obs, [0]))
         return np.array(self.obs)
 
-        def render(self, mode='human'):
+        def render(self, mode="human"):
             pass
 
     def __obs_to_state__(self):
-        return 
+        return

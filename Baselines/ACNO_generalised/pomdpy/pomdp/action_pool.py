@@ -17,7 +17,3 @@ class ActionPool(with_metaclass(abc.ABCMeta, object)):
         :param belief_node:
         :return action_mapping:
         """
-
-
-
-

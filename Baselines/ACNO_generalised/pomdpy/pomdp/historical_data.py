@@ -10,6 +10,7 @@ class HistoricalData(object):
     In order to function a HistoricalData must be able to generate a new, derived HistoricalData
     instance for a child belief node, based on the action and observation taken to get there.
     """
+
     @abc.abstractmethod
     def copy(self):
         """
@@ -25,4 +26,3 @@ class HistoricalData(object):
         :param observation:
         :return: HistoricalData
         """
-

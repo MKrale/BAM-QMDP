@@ -10,6 +10,7 @@ class BeliefTree(BeliefStructure):
     * Most of the work is done in the individual classes for the mappings and nodes; this class
     * simply owns a root node and handles pruning
     """
+
     def __init__(self, agent):
         super(BeliefTree, self).__init__()
         self.agent = agent
@@ -76,7 +77,9 @@ class BeliefTree(BeliefStructure):
             entry.child_node.parent_entry = None
             entry.map = None
             entry.child_node.observation_map.owner = None
-            for observation_entry in list(entry.child_node.observation_map.child_map.values()):
+            for observation_entry in list(
+                entry.child_node.observation_map.child_map.values()
+            ):
                 self.prune_node(observation_entry.child_node)
                 observation_entry.map = None
                 observation_entry.child_node = None
@@ -102,7 +105,11 @@ class BeliefTree(BeliefStructure):
             for action_mapping_entry in parent_belief.action_map.get_child_entries():
 
                 # for every observation made
-                for obs_mapping_entry in action_mapping_entry.child_node.observation_map.get_child_entries():
+                for (
+                    obs_mapping_entry
+                ) in (
+                    action_mapping_entry.child_node.observation_map.get_child_entries()
+                ):
 
                     # if the belief node is not the new root of the belief tree, prune it
                     if obs_mapping_entry.child_node is not bn:

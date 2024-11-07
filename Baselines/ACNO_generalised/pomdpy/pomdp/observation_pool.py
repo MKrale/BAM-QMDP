@@ -20,5 +20,3 @@ class ObservationPool(with_metaclass(abc.ABCMeta, object)):
         :param action_node:
         :return: ObservationMapping
         """
-
-

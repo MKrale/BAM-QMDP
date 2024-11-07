@@ -26,6 +26,7 @@ class DiscreteAction(Point):
         Returns a String version of the action type
         :return:
         """
+
     @abc.abstractmethod
     def copy(self):
         """

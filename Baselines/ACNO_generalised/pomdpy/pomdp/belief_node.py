@@ -14,6 +14,7 @@ class BeliefNode(object):
     *
     * Key method is create_or_get_child()
     """
+
     def __init__(self, solver, id=None, parent_entry=None):
         if id is None:
             self.id = -1
@@ -21,10 +22,14 @@ class BeliefNode(object):
             self.id = id
 
         self.solver = solver
-        self.data = None    # The smart history-based data, to be used for history-based policies.
+        self.data = (
+            None  # The smart history-based data, to be used for history-based policies.
+        )
         self.depth = -1
         self.action_map = None
-        self.state_particles = []   # The set of states that comprise the belief distribution of this belief node
+        self.state_particles = (
+            []
+        )  # The set of states that comprise the belief distribution of this belief node
 
         if parent_entry is not None:
             self.parent_entry = parent_entry
@@ -107,12 +112,16 @@ class BeliefNode(object):
         action_node = self.action_map.get_action_node(action)
         if action_node is None:
             action_node = self.action_map.create_action_node(action)
-            action_node.set_mapping(self.solver.observation_pool.create_observation_mapping(action_node))
+            action_node.set_mapping(
+                self.solver.observation_pool.create_observation_mapping(action_node)
+            )
         child_node, added = action_node.create_or_get_child(obs)
-        if added:   # if the child node was added - it is new
+        if added:  # if the child node was added - it is new
             if self.data is not None:
                 child_node.data = self.data.create_child(action, obs)
-            child_node.action_map = self.solver.action_pool.create_action_mapping(child_node)
+            child_node.action_map = self.solver.action_pool.create_action_mapping(
+                child_node
+            )
         else:
             # Update the current action mapping to reflect the state of the simulation
             # child_node.action_map.update()

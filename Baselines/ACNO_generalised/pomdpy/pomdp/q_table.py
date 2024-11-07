@@ -30,10 +30,12 @@ class QTable(BeliefStructure):
         :param init_value - used to initialize the Q values to some arbitrary value
         :return:
         """
-        self.q_table = [[init_value for _ in
-                         range(self.agent.model.get_all_actions()[1])]
-                        for _ in range(self.agent.model.get_all_states()[1])]
+        self.q_table = [
+            [init_value for _ in range(self.agent.model.get_all_actions()[1])]
+            for _ in range(self.agent.model.get_all_states()[1])
+        ]
 
-        self.visit_frequency_table = [[0 for _ in
-                                       range(self.agent.model.get_all_actions()[1])]
-                                      for _ in range(self.agent.model.get_all_states()[1])]
+        self.visit_frequency_table = [
+            [0 for _ in range(self.agent.model.get_all_actions()[1])]
+            for _ in range(self.agent.model.get_all_states()[1])
+        ]

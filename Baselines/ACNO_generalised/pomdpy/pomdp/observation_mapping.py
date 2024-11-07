@@ -56,6 +56,7 @@ class ObservationMapping(with_metaclass(abc.ABCMeta, object)):
         :return:
         """
 
+
 class ObservationMappingEntry(with_metaclass(abc.ABCMeta, object)):
     """
     An interface that represents an edge in the belief tree between an action node and a
@@ -68,7 +69,6 @@ class ObservationMappingEntry(with_metaclass(abc.ABCMeta, object)):
     Apart from grouping observations together, the primary purpose of this entry is to store
     a visit count - i.e. the number of times this edge has been visited during searching.
     """
-
 
     @abc.abstractmethod
     def get_observation(self):

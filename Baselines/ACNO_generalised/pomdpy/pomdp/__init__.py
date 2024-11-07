@@ -14,6 +14,19 @@ from .point import Point
 from .q_table import QTable
 from .statistic import Statistic
 
-__all__ = ['action_mapping', 'action_node', 'action_pool', 'belief_node', 'belief_structure', 'belief_tree',
-           'historical_data', 'history', 'model', 'observation_mapping', 'observation_pool', 'point', 'q_table',
-           'statistic']
+__all__ = [
+    "action_mapping",
+    "action_node",
+    "action_pool",
+    "belief_node",
+    "belief_structure",
+    "belief_tree",
+    "historical_data",
+    "history",
+    "model",
+    "observation_mapping",
+    "observation_pool",
+    "point",
+    "q_table",
+    "statistic",
+]

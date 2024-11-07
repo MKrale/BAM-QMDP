@@ -3,6 +3,7 @@ from gym import spaces
 from gym.utils import seeding
 import numpy as np
 
+
 class Measure_Loss_Env(gym.Env):
     """
     Measure Loss environment
@@ -13,9 +14,10 @@ class Measure_Loss_Env(gym.Env):
     and a chance (1-p) to change to s-
     From s+, taking action 0 ends the run and gives reward r.
     From s-, taking action 0 also end the run but gives no reward.
-    This environment is described in the report Merlijn Krale (link here!), 
+    This environment is described in the report Merlijn Krale (link here!),
     and is used to test Active-Measuring algorithms.
     """
+
     def __init__(self, p=0.8, r=1):
 
         self.p = p
@@ -40,7 +42,7 @@ class Measure_Loss_Env(gym.Env):
             next_state = 0
         else:
             if self.state == 0:
-                if np.random.rand() < self.p:   # s+
+                if np.random.rand() < self.p:  # s+
                     next_state = 1
                 else:
                     next_state = 2

@@ -3,7 +3,7 @@ import numpy as np
 
 
 # UCB1 action selection algorithm
-def ucb_action(mcts, current_node, greedy, filterUnder = 0):
+def ucb_action(mcts, current_node, greedy, filterUnder=0):
     best_actions = []
     best_q_value = -np.inf
     mapping = current_node.action_map
@@ -32,7 +32,7 @@ def ucb_action(mcts, current_node, greedy, filterUnder = 0):
             # best actions is a list of Discrete Actions
             best_actions.append(action_entry.get_action())
     assert best_actions.__len__() is not 0
-    
+
     # Break ties with mean:
     # if best_actions.__len__() > 1:
     #     newActionList = []
@@ -48,7 +48,7 @@ def ucb_action(mcts, current_node, greedy, filterUnder = 0):
     # at each iteration print out 16 action (mean q values)
     if greedy:
         print(best_q_value)
-    
+
     return random.choice(best_actions)
 
 
@@ -67,7 +67,7 @@ def e_greedy(current_node, epsilon):
             else:
                 return action_entry.get_action()
         # No legal actions
-        raise RuntimeError('No legal actions to take')
+        raise RuntimeError("No legal actions to take")
     else:
         # Greedy choice
         for action_entry in actions:

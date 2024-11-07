@@ -6,6 +6,7 @@ class ActionNode(object):
     Contains the ActionNode class, which represents a belief-action pair (i.e. the part of the
     belief tree corresponding to taking a given action from a specific belief.
     """
+
     def __init__(self, parent_entry=None):
         # parent_entry is type ActionMappingEntry
         if parent_entry is not None:
@@ -38,6 +39,3 @@ class ActionNode(object):
             child_node = self.observation_map.create_belief(obs)
             added = True
         return child_node, added
-
-
-

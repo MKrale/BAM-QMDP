@@ -145,7 +145,7 @@ class BlackjackEnv(gym.Env):
         return self._get_obs(), reward, terminated, False
 
     def _get_obs(self):
-        return sum_hand(self.player)*4 + self.dealer[0]*2 + usable_ace(self.player)
+        return sum_hand(self.player) * 4 + self.dealer[0] * 2 + usable_ace(self.player)
 
         return (sum_hand(self.player), self.dealer[0], usable_ace(self.player))
 
@@ -171,11 +171,10 @@ class BlackjackEnv(gym.Env):
         else:
             self.dealer_top_card_value_str = str(dealer_card_value)
 
-
         if not return_info:
             return self._get_obs()
         else:
             return self._get_obs(), {}
-    
+
     def getname(self):
         return "Blackjack"

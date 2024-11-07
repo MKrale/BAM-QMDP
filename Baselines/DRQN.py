@@ -2,8 +2,6 @@
 File containing code for DRQN, a generic RL POMDP algorithm. Currently unused and untested, so use at own risk!
 """
 
-
-
 from collections import deque
 from multiprocessing.forkserver import MAXFDS_TO_SEND
 import random
@@ -14,13 +12,15 @@ import random
 from torch.autograd import Variable
 import sys
 import pandas as pd
+
 # from env_Tmaze import EnvTMaze
 import numpy as np
 import math
 import time
 
 import matplotlib
-matplotlib.use('Agg')
+
+matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 
 from AM_Gyms.AM_Env_wrapper import AM_ENV
@@ -31,6 +31,7 @@ Start from a fixed patient state represented by 256.
 One hot encode observations, including the missingness observation
 and learn the LSTM policy mapping from observations.
 """
+
 
 class ReplayMemory(object):
     def __init__(self, max_epi_num=50, max_epi_len=300):
@@ -59,7 +60,7 @@ class ReplayMemory(object):
 
     # samples a trajectory of length 5
     def sample(self):
-        epi_index = random.randint(0, len(self.memory)-2)
+        epi_index = random.randint(0, len(self.memory) - 2)
         if self.is_available():
             return self.memory[epi_index]
         else:
@@ -76,27 +77,35 @@ class ReplayMemory(object):
 
     def print_info(self):
         for i in range(len(self.memory)):
-            print('epi', i, 'length', len(self.memory[i]))
+            print("epi", i, "length", len(self.memory[i]))
+
 
 class Flatten(nn.Module):
     def forward(self, input):
         return input.view(input.size(0), -1)
 
+
 class DRQN(nn.Module):
-    def __init__(self, env:AM_ENV):
+    def __init__(self, env: AM_ENV):
         super(DRQN, self).__init__()
-        
+
         # Import environment variables
         self.env = env
-        self.StateSize, self.CActionSize, self.MeasureCost, self.s_init = self.env.get_vars()
-        self.ActionSize = 2*self.CActionSize
-        
-        self.lstm_i_dim = 10    # input dimension of LSTM
-        self.lstm_h_dim = 10     # output dimension of LSTM
-        self.lstm_N_layer = 10   # number of layers of LSTM
-        self.convSize = int(self.StateSize/2)
+        self.StateSize, self.CActionSize, self.MeasureCost, self.s_init = (
+            self.env.get_vars()
+        )
+        self.ActionSize = 2 * self.CActionSize
+
+        self.lstm_i_dim = 10  # input dimension of LSTM
+        self.lstm_h_dim = 10  # output dimension of LSTM
+        self.lstm_N_layer = 10  # number of layers of LSTM
+        self.convSize = int(self.StateSize / 2)
         self.flat1 = nn.Linear(self.StateSize, self.lstm_h_dim)
-        self.lstm = nn.LSTM(input_size=self.lstm_i_dim, hidden_size=self.lstm_h_dim, num_layers=self.lstm_N_layer)
+        self.lstm = nn.LSTM(
+            input_size=self.lstm_i_dim,
+            hidden_size=self.lstm_h_dim,
+            num_layers=self.lstm_N_layer,
+        )
         self.fc1 = nn.Linear(self.lstm_h_dim, self.convSize)
         self.fc2 = nn.Linear(self.convSize, self.ActionSize)
 
@@ -108,38 +117,46 @@ class DRQN(nn.Module):
         h5 = self.fc2(h4)
         return h5, new_hidden
 
+
 class DRQN_Agent(object):
-    def __init__(self, env:AM_ENV):
+    def __init__(self, env: AM_ENV):
         self.env = env
-        self.StateSize, self.CActionSize, self.MeasureCost, self.s_init = self.env.get_vars()
+        self.StateSize, self.CActionSize, self.MeasureCost, self.s_init = (
+            self.env.get_vars()
+        )
         self.ActionSize = self.CActionSize * 2
-        
+
         self.EmptyObservation = -1
-        
+
         self.drqn = DRQN(self.env)
-        self.buffer = ReplayMemory() #Should be correcly set later!
-        
+        self.buffer = ReplayMemory()  # Should be correcly set later!
+
         self.loss_fn = torch.nn.MSELoss()
         self.optimizer = torch.optim.Adam(self.drqn.parameters(), lr=1e-3)
-        
-        
+
         self.gamma = 1
         self.maxsteps = 500
 
     def remember(self, state, action, reward):
         self.buffer.remember(state, action, reward)
-        
+
     def get_empty_obs(self):
         return np.zeros(self.StateSize)
-    
+
     def get_hidden_empty(self):
-        return (Variable(torch.zeros(self.drqn.lstm_N_layer, 1, self.drqn.lstm_h_dim).float()), Variable(torch.zeros(self.drqn.lstm_N_layer, 1, self.drqn.lstm_h_dim).float()))
-    
+        return (
+            Variable(
+                torch.zeros(self.drqn.lstm_N_layer, 1, self.drqn.lstm_h_dim).float()
+            ),
+            Variable(
+                torch.zeros(self.drqn.lstm_N_layer, 1, self.drqn.lstm_h_dim).float()
+            ),
+        )
+
     def stateNmbr_to_state(self, stateNmbr):
         state = np.zeros(self.StateSize)
         state[stateNmbr] += 1
         return state
-
 
     def train(self):
         if self.buffer.is_available():
@@ -160,9 +177,11 @@ class DRQN_Agent(object):
 
             losses = []
             for t in range(len(memo) - 1):
-                max_next_q = torch.max(Q_est[t+1]).clone().detach()
+                max_next_q = torch.max(Q_est[t + 1]).clone().detach()
                 q_target = Qs[t].clone().detach()
-                q_target[0, 0, action_list[t]] = reward_list[t] + self.gamma * max_next_q
+                q_target[0, 0, action_list[t]] = (
+                    reward_list[t] + self.gamma * max_next_q
+                )
                 losses.append(self.loss_fn(Qs[t], q_target))
 
             T = len(memo) - 1
@@ -176,26 +195,29 @@ class DRQN_Agent(object):
 
     def get_action(self, obs, hidden, epsilon):
         obs = torch.Tensor([obs])
-        if len(obs.shape) == 1: # batch sz: 1
+        if len(obs.shape) == 1:  # batch sz: 1
             obs = obs.unsqueeze(0)
         if random.random() > epsilon:
             q, new_hidden = self.drqn.forward(obs, hidden)
             action = q[0].max(1)[1].data[0].item()
         else:
             q, new_hidden = self.drqn.forward(obs, hidden)
-            action = random.randint(0, self.CActionSize-1)
+            action = random.randint(0, self.CActionSize - 1)
         return action, new_hidden
-    
-    def run(self, nmbr_episodes, logging = True):
-        rewards, steps, measurements = np.zeros(nmbr_episodes), np.zeros(nmbr_episodes), np.zeros(nmbr_episodes)
+
+    def run(self, nmbr_episodes, logging=True):
+        rewards, steps, measurements = (
+            np.zeros(nmbr_episodes),
+            np.zeros(nmbr_episodes),
+            np.zeros(nmbr_episodes),
+        )
         self.buffer = ReplayMemory(nmbr_episodes, self.maxsteps)
-        
+
         # Run episodes
         for i in range(nmbr_episodes):
-            rewards[i], steps[i], measurements[i] =  self.run_episode(i)
+            rewards[i], steps[i], measurements[i] = self.run_episode(i)
         return rewards, steps, measurements
-    
-    
+
     def run_episode(self, episode):
         hidden = self.get_hidden_empty()
         returns = 0
@@ -208,8 +230,8 @@ class DRQN_Agent(object):
             action, hidden = self.get_action(obs, hidden, get_decay(episode))
             actions.append(action)
             ac = action % self.CActionSize
-            reward, done= self.env.step(ac)
-            
+            reward, done = self.env.step(ac)
+
             if action < self.CActionSize:
                 nmbr_measurements += 1
                 new_obs, cost = self.env.measure()
@@ -217,34 +239,44 @@ class DRQN_Agent(object):
                 reward -= cost
             else:
                 new_obs = self.get_empty_obs()
-            
-            
+
             _obs, _cost = self.env.measure()
             _obs = self.stateNmbr_to_state(_obs)
             if done or np.all(obs == _obs):
                 reward -= 0.1
                 pass
             obs = new_obs
-            returns += reward #* self.gamma ** (step)
+            returns += reward  # * self.gamma ** (step)
             self.remember(obs, action, reward)
             # if reward != 0 or MC_iter == max_MC_iter-1:
-            if done: #or step >= self.maxsteps-1:
+            if done:  # or step >= self.maxsteps-1:
                 self.buffer.create_new_epi()
                 break
-        print('Episode', episode, 'returns', returns, 'measurements: ', nmbr_measurements, "steps: ", step) #  'where', env.if_up)
+        print(
+            "Episode",
+            episode,
+            "returns",
+            returns,
+            "measurements: ",
+            nmbr_measurements,
+            "steps: ",
+            step,
+        )  #  'where', env.if_up)
         if self.buffer.is_available():
             self.train()
         return returns, step, nmbr_measurements
-            
+
     def evaluate(self):
         """To Be Written!"""
-        
-        
+
         # STOP TRAINING and only use the last model to evaluate on 100 new trials
         return_list = []
         for eval_iter in range(50):
             self.env.reset()
-            hidden = (Variable(torch.zeros(1, 1, 16).float()), Variable(torch.zeros(1, 1, 16).float()))
+            hidden = (
+                Variable(torch.zeros(1, 1, 16).float()),
+                Variable(torch.zeros(1, 1, 16).float()),
+            )
             returns = 0
             for MC_iter in range(self.maxsteps):
                 # env.render()
@@ -252,37 +284,27 @@ class DRQN_Agent(object):
                 obs, reward, done, info = self.env.step(action)
                 observed = bool(action < 8)
                 obs = one_hot_encoding(obs)
-                print('Observed:', observed)
-                print('Action: ', action)
+                print("Observed:", observed)
+                print("Action: ", action)
                 returns += reward * self.gamma ** (MC_iter)
                 self.remember(obs, action, reward)
                 # if reward != 0 or MC_iter == max_MC_iter-1:
-                if done or MC_iter == self.maxsteps-1:
+                if done or MC_iter == self.maxsteps - 1:
                     self.buffer.create_new_epi()
                     break
-            print('Returns: ', returns)
+            print("Returns: ", returns)
 
             return_list.append(returns)
-        print('Obs cost: ', self.MeasureCost)
-        print('Eval mean return: ', np.mean(return_list))
-        print('Eval ste return: ', np.std(return_list))
-        print('Eval ste return: ', np.std(return_list)/ np.sqrt(50))
+        print("Obs cost: ", self.MeasureCost)
+        print("Eval mean return: ", np.mean(return_list))
+        print("Eval ste return: ", np.std(return_list))
+        print("Eval ste return: ", np.std(return_list) / np.sqrt(50))
 
         # new is same as w/out "new" but just want to make sure the stats are consistent
         # np.save("exp_0523/drqn/new_2k_hidden_DRQN_sepsis_obs_cost_0.05_test.npy", np.array(train_curve))
-        print("drqn runtime: NOT IMPLEMENTED! ", time.time() - 0) 
-
-
-
-
-
-
-
-
+        print("drqn runtime: NOT IMPLEMENTED! ", time.time() - 0)
 
 
 def get_decay(epi_iter):
     min_decay = 0.01
-    return 0.2*max(min_decay, math.pow(0.99, epi_iter))
-
-
+    return 0.2 * max(min_decay, math.pow(0.99, epi_iter))

@@ -42,7 +42,7 @@ class ValueIteration(Solver):
 
         # start with 1 step planning horizon, up to horizon-length planning horizon
         for k in range(horizon):
-            print('[Value Iteration] planning horizon {}...'.format(k))
+            print("[Value Iteration] planning horizon {}...".format(k))
             # new set of alpha vectors to add to set gamma
             gamma_k = set()
             # Compute the new coefficients for the new alpha-vectors
@@ -97,8 +97,8 @@ class ValueIteration(Solver):
         # parameters for linear program
         delta = 0.0000000001
         # equality constraints on the belief states
-        A_eq = np.array([np.append(np.ones(n_states), [0.])])
-        b_eq = np.array([1.])
+        A_eq = np.array([np.append(np.ones(n_states), [0.0])])
+        b_eq = np.array([1.0])
 
         # dirty set
         F = self.gamma.copy()
@@ -119,11 +119,13 @@ class ValueIteration(Solver):
             F.add(av_i)  # don't want to remove it yet from F
             dominated = False
             for av_j in Q:
-                c = np.append(np.zeros(n_states), [1.])
-                A_ub = np.array([np.append(-(av_i.v - av_j.v), [-1.])])
+                c = np.append(np.zeros(n_states), [1.0])
+                A_ub = np.array([np.append(-(av_i.v - av_j.v), [-1.0])])
                 b_ub = np.array([-delta])
 
-                res = linprog(c, A_eq=A_eq, b_eq=b_eq, A_ub=A_ub, b_ub=b_ub, bounds=(0, None))
+                res = linprog(
+                    c, A_eq=A_eq, b_eq=b_eq, A_ub=A_ub, b_ub=b_ub, bounds=(0, None)
+                )
                 if res.x[n_states] > 0.0:
                     # this one is dominated
                     dominated = True
@@ -134,7 +136,7 @@ class ValueIteration(Solver):
                 max_k = -np.inf
                 best = None
                 for av_k in F:
-                    b = res.x[0:n_states] # originally :2
+                    b = res.x[0:n_states]  # originally :2
                     v = np.dot(av_k.v, b)
                     if v > max_k:
                         max_k = v
@@ -180,6 +182,6 @@ class ValueIteration(Solver):
                 best = av
 
         if best is None:
-            raise ValueError('Vector set should not be empty')
+            raise ValueError("Vector set should not be empty")
 
         return best.action, best

@@ -9,6 +9,7 @@ class Statistic(object):
     """
     General statistics class
     """
+
     def __init__(self, name, val=0.0, count=0.0):
         self.name = name
         self.mean = val
@@ -26,7 +27,13 @@ class Statistic(object):
         self.count += 1
         assert self.count > 0
         self.mean += old_div((val - self.mean), self.count)
-        self.variance = old_div((count_old * (self.variance + mean_old * mean_old) + val * val), self.count) - self.mean * self.mean
+        self.variance = (
+            old_div(
+                (count_old * (self.variance + mean_old * mean_old) + val * val),
+                self.count,
+            )
+            - self.mean * self.mean
+        )
         if val > self.max:
             self.max = val
         if val < self.min:

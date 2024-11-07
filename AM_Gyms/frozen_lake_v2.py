@@ -28,6 +28,7 @@ MAPS = {
     ],
 }
 
+
 def is_valid(board: List[List[str]], max_size: int) -> bool:
     frontier, discovered = [], set()
     frontier.append((0, 0))
@@ -142,22 +143,30 @@ class FrozenLakeEnv_v2(Env):
                         li.append((1.0, *update_probability_matrix(row, col, a)))
                     else:
                         if is_slippery:
-                            (row_2, col_2) = inc(row,col,a)
+                            (row_2, col_2) = inc(row, col, a)
                             letter2 = desc[row_2, col_2]
                             # If next state a hole or goal, we always go there
                             if letter2 in b"GH":
-                                li.append((1.0, *update_probability_matrix(row, col, a)))
+                                li.append(
+                                    (1.0, *update_probability_matrix(row, col, a))
+                                )
                             # if not, we have a 50/50 chance to either take 1 or two steps
                             else:
-                                li.append(( 1.0 / 2.0, *update_probability_matrix(row, col, a) ))
-                                li.append(( 1.0 / 2.0, *update_probability_matrix(row_2, col_2, a) ))
+                                li.append(
+                                    (1.0 / 2.0, *update_probability_matrix(row, col, a))
+                                )
+                                li.append(
+                                    (
+                                        1.0 / 2.0,
+                                        *update_probability_matrix(row_2, col_2, a),
+                                    )
+                                )
 
                         else:
                             li.append((1.0, *update_probability_matrix(row, col, a)))
 
         self.observation_space = spaces.Discrete(nS)
         self.action_space = spaces.Discrete(nA)
-
 
         # pygame utils
         self.window_size = (min(64 * ncol, 512), min(64 * nrow, 512))
@@ -193,19 +202,19 @@ class FrozenLakeEnv_v2(Env):
         self.s = categorical_sample(self.initial_state_distrib, self.np_random)
         self.lastaction = None
 
-
         if not return_info:
             return int(self.s)
         else:
             return int(self.s), {"prob": 1}
-    
+
     def getname(self):
         if self.is_slippery:
             variant_name = "semi-slippery"
         else:
             variant_name = "det"
-            
+
         return "Lake_{}_{}".format(self.nrow, variant_name)
+
 
 # Elf and stool from https://franuka.itch.io/rpg-snow-tileset
 # All other assets by Mel Tillery http://www.cyaneus.com/

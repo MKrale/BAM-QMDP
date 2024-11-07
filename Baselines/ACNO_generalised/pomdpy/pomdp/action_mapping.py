@@ -19,7 +19,6 @@ class ActionMapping(with_metaclass(abc.ABCMeta, object)):
         :return action_node:
         """
 
-
     @abc.abstractmethod
     def create_action_node(self, action):
         """
@@ -116,4 +115,3 @@ class ActionMappingEntry(with_metaclass(abc.ABCMeta, object)):
         Returns the action for this entry.
         :return Action:
         """
-

@@ -32,9 +32,9 @@ class Model(with_metaclass(abc.ABCMeta, object)):
         pp(args)
 
         my_dir = os.path.dirname(__file__)
-        self.weight_dir = os.path.join(my_dir, '..', '..', 'experiments', 'pickle_jar')
-        self.ckpt_dir = os.path.join(my_dir, '..', '..', 'experiments', 'checkpoints')
-        self.logs = os.path.join(my_dir, '..', '..', 'experiments', 'tensorboard')
+        self.weight_dir = os.path.join(my_dir, "..", "..", "experiments", "pickle_jar")
+        self.ckpt_dir = os.path.join(my_dir, "..", "..", "experiments", "checkpoints")
+        self.logs = os.path.join(my_dir, "..", "..", "experiments", "tensorboard")
 
         # TODO: More elegant naming convention for experiments
         if not os.path.exists(self.logs):
@@ -218,7 +218,9 @@ class Model(with_metaclass(abc.ABCMeta, object)):
         :return:
         """
 
-    def generate_particles(self, previous_belief, action, obs, n_particles, prev_particles):
+    def generate_particles(
+        self, previous_belief, action, obs, n_particles, prev_particles
+    ):
         """
         Generates new state particles based on the state particles of the previous node,
         * as well as on the action and observation.
@@ -275,7 +277,7 @@ class Model(with_metaclass(abc.ABCMeta, object)):
             # Now generate a step in the model, and compare the observation to the actual observation.
             # Note that this comparison is done implicitly via the observation mapping, to ensure
             # that approximate observations are treated cleanly.
-            result, is_legal = self.generate_step(state, action, rollout = True)
+            result, is_legal = self.generate_step(state, action, rollout=True)
             if obs_map.get_belief(result.observation) is child_node:
                 particles.append(result.next_state)
         return particles
@@ -283,12 +285,13 @@ class Model(with_metaclass(abc.ABCMeta, object)):
 
 class StepResult(object):
     """
-     Represents the results of a complete step in the model, including the next state,
-     * observation, and reward
-     *
-     * For convenience, this also includes the action taken, and a boolean flag representing
-     * whether or not the resulting next state is a terminal state.
+    Represents the results of a complete step in the model, including the next state,
+    * observation, and reward
+    *
+    * For convenience, this also includes the action taken, and a boolean flag representing
+    * whether or not the resulting next state is a terminal state.
     """
+
     def __init__(self):
         self.action = None
         self.observation = None
@@ -298,13 +301,13 @@ class StepResult(object):
 
     def print_step_result(self):
         print("------- Step Result --------")
-        print("Action: ", end=' ')
+        print("Action: ", end=" ")
         self.action.print_action()
-        print("Observation: ", end=' ')
+        print("Observation: ", end=" ")
         self.observation.print_observation()
-        print("Reward: ", end=' ')
+        print("Reward: ", end=" ")
         print(self.reward)
-        print("Next state: ", end=' ')
+        print("Next state: ", end=" ")
         self.next_state.print_state()
-        print("Is terminal: ", end=' ')
+        print("Is terminal: ", end=" ")
         print(self.is_terminal)

@@ -9,6 +9,7 @@ class DiscreteObservationMap(ObservationMapping):
     * to its associated entry in the mapping
     * The dictionary returns None if an observation is not yet stored in the dictionary
     """
+
     def __init__(self, action_node, agent):
         super(DiscreteObservationMap, self).__init__(action_node)
         self.agent = agent
@@ -43,7 +44,7 @@ class DiscreteObservationMap(ObservationMapping):
     def get_entry(self, obs):
         for i in list(self.child_map.values()):
             if obs.position == i.observation:
-            # if obs == i.observation:
+                # if obs == i.observation:
                 return i
         return None
 
@@ -58,7 +59,7 @@ class DiscreteObservationMapEntry(ObservationMappingEntry):
 
     def __init__(self):
         self.map = None  # DiscreteObservationMap
-        self.observation = None     # DiscreteObservation
+        self.observation = None  # DiscreteObservation
         # The child node of this entry (should always be non-null).
         self.child_node = None  # belief node
         self.visit_count = 0
@@ -69,5 +70,3 @@ class DiscreteObservationMapEntry(ObservationMappingEntry):
     def update_visit_count(self, delta_n_visits):
         self.visit_count += delta_n_visits
         self.map.total_visit_count += delta_n_visits
-
-

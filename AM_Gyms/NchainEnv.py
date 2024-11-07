@@ -9,6 +9,7 @@ from gym import spaces
 from gym.utils import seeding
 import numpy as np
 
+
 class NChainEnv(gym.Env):
     """n-Chain environment
     This game presents moves along a linear chain of states, with two actions:
@@ -23,6 +24,7 @@ class NChainEnv(gym.Env):
     A Bayesian Framework for Reinforcement Learning by Malcolm Strens (2000)
     http://ceit.aut.ac.ir/~shiry/lecture/machine-learning/papers/BRL-2000.pdf
     """
+
     def __init__(self, n=5, slip=0, small=0, large=1, penalty=0.01):
         self.n = n
         self.slip = slip  # probability of 'slipping' an action
@@ -52,11 +54,11 @@ class NChainEnv(gym.Env):
         else:  # 'forwards': stay at the end of the chain, collect large reward
             reward = self.large
             done = True
-        return self.state, reward-self.penalty, done, {}
+        return self.state, reward - self.penalty, done, {}
 
     def reset(self):
         self.state = 0
         return self.state
-    
+
     def getname(self):
         return "Chain_{}".format(self.n)

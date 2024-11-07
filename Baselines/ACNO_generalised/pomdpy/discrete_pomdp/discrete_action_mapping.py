@@ -13,21 +13,24 @@ class DiscreteActionMapping(ActionMapping):
 
     This is a concrete implementation of the abstract class ActionMapping for Discrete POMDPs
     """
-    def __init__(self, belief_node_owner, discrete_action_pool, bin_sequence, preferedOver):
+
+    def __init__(
+        self, belief_node_owner, discrete_action_pool, bin_sequence, preferedOver
+    ):
         super(DiscreteActionMapping, self).__init__(belief_node_owner)
         self.pool = discrete_action_pool
         self.number_of_bins = self.pool.all_actions.__len__()
-        self.entries = {}   # Dictionary of DiscreteActionMappingEntry objects
+        self.entries = {}  # Dictionary of DiscreteActionMappingEntry objects
         self.bin_sequence = bin_sequence
         self.number_of_children = 0
         self.total_visit_count = 0
 
-        for i in range(0,self.number_of_bins):
-            entry = DiscreteActionMappingEntry() 
+        for i in range(0, self.number_of_bins):
+            entry = DiscreteActionMappingEntry()
             entry.bin_number = i
             entry.map = self
             entry.is_legal = False
-            entry.preferred_action = (i > preferedOver)
+            entry.preferred_action = i > preferedOver
             self.entries.__setitem__(i, entry)
 
         # Only entries in the sequence are legal
@@ -35,7 +38,9 @@ class DiscreteActionMapping(ActionMapping):
             self.entries.get(bin_number).is_legal = True
 
     def copy(self):
-        action_map_copy = DiscreteActionMapping(self.owner, self.pool, list(self.bin_sequence))
+        action_map_copy = DiscreteActionMapping(
+            self.owner, self.pool, list(self.bin_sequence)
+        )
         action_map_copy.number_of_children = self.number_of_bins
         action_map_copy.entries = self.entries.copy()
         action_map_copy.number_of_children = self.number_of_children
@@ -122,10 +127,11 @@ class DiscreteActionMappingEntry(ActionMappingEntry):
     Each entry stores its bin number and a reference back to its parent map, as well as a child node,
     visit count, total and mean Q-values, and a flag for whether or not the action is legal.
     """
+
     def __init__(self):
         self.bin_number = -1
-        self.map = None     # DiscreteActionMapping
-        self.child_node = None       # ActionNode
+        self.map = None  # DiscreteActionMapping
+        self.child_node = None  # ActionNode
         self.visit_count = 0
         self.total_q_value = 0
         self.mean_q_value = 0
@@ -150,7 +156,7 @@ class DiscreteActionMappingEntry(ActionMappingEntry):
         return self.visit_count
 
     def update_q_value(self, this_q, delta_n_visits=0):
-        
+
         if this_q == 0:
             return False
         old_mean_q = self.mean_q_value
@@ -173,7 +179,6 @@ class DiscreteActionMappingEntry(ActionMappingEntry):
 
         # Average the Q value by taking the Total Q value of this entry divided by the
         # number of times this action has been tried
-        
 
         return self.mean_q_value != old_mean_q
 
@@ -187,9 +192,3 @@ class DiscreteActionMappingEntry(ActionMappingEntry):
             if not self.is_legal:
                 self.is_legal = False
                 self.map.bin_sequence.remove(self.bin_number)
-
-
-
-
-
-

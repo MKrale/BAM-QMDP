@@ -17,6 +17,7 @@ class BeliefTreeSolver(Solver):
 
     Provides a belief search tree and supports on- and off-policy methods
     """
+
     def __init__(self, agent):
         super(BeliefTreeSolver, self).__init__(agent)
         # The agent owns Histories, the collection of History Sequences.
@@ -85,7 +86,7 @@ class BeliefTreeSolver(Solver):
         start_time = time.time()
         self.belief_tree.prune_siblings(belief_node)
         elapsed = time.time() - start_time
-        #console(3, module, "Time spent pruning = " + str(elapsed) + " seconds")
+        # console(3, module, "Time spent pruning = " + str(elapsed) + " seconds")
 
     def rollout_search(self, belief_node):
         """
@@ -98,24 +99,30 @@ class BeliefTreeSolver(Solver):
         # rollout each action once
         for i in range(legal_actions.__len__()):
             state = belief_node.sample_particle()
-            action = legal_actions[i % legal_actions.__len__()]            
+            action = legal_actions[i % legal_actions.__len__()]
 
             # model.generate_step casts the variable action from an int to the proper DiscreteAction subclass type
             # (*** CHANGE ***)
-            is_mdp = bool(self.model.solver =='MCP')
-            step_result, is_legal = self.model.generate_step(state, action, is_mdp=is_mdp)
+            is_mdp = bool(self.model.solver == "MCP")
+            step_result, is_legal = self.model.generate_step(
+                state, action, is_mdp=is_mdp
+            )
 
             if not step_result.is_terminal:
-                child_node, added = belief_node.create_or_get_child(step_result.action, step_result.observation)
+                child_node, added = belief_node.create_or_get_child(
+                    step_result.action, step_result.observation
+                )
                 child_node.state_particles.append(step_result.next_state)
                 delayed_reward = self.rollout(child_node)
             else:
                 delayed_reward = 0
 
-            action_mapping_entry = belief_node.action_map.get_entry(step_result.action.bin_number)
+            action_mapping_entry = belief_node.action_map.get_entry(
+                step_result.action.bin_number
+            )
 
             # Random policy
-            q_value = (step_result.reward + self.model.discount * delayed_reward)
+            q_value = step_result.reward + self.model.discount * delayed_reward
             # if delayed_reward != 0:
             #     print ("IN ROLLOUTSEARCH:", q_value)
 
@@ -128,7 +135,7 @@ class BeliefTreeSolver(Solver):
         :param belief_node:
         :return:
         """
-        legal_actions = belief_node.data.generate_legal_actions(includeMeasuring = False)
+        legal_actions = belief_node.data.generate_legal_actions(includeMeasuring=False)
 
         if not isinstance(legal_actions, list):
             legal_actions = list(legal_actions)
@@ -142,8 +149,10 @@ class BeliefTreeSolver(Solver):
         while num_steps < self.model.max_depth and not is_terminal:
             legal_action = random.choice(legal_actions)
             # (*** CHANGE ***)
-            is_mdp = bool(self.model.solver == 'MCP')
-            step_result, is_legal = self.model.generate_step(state, legal_action, is_mdp=is_mdp, rollout=True)
+            is_mdp = bool(self.model.solver == "MCP")
+            step_result, is_legal = self.model.generate_step(
+                state, legal_action, is_mdp=is_mdp, rollout=True
+            )
             is_terminal = step_result.is_terminal
             discounted_reward_sum += step_result.reward * discount
             discount *= self.model.discount
@@ -170,17 +179,19 @@ class BeliefTreeSolver(Solver):
         # This is important in case there are certain actions that change the state of the simulator
         self.model.update(step_result)
 
-        child_belief_node = self.belief_tree_index.get_child(step_result.action, step_result.observation)
-        
-
+        child_belief_node = self.belief_tree_index.get_child(
+            step_result.action, step_result.observation
+        )
 
         # If the child_belief_node is None because the step result randomly produced a different observation,
         # grab any of the beliefs extending from the belief node's action node
         if child_belief_node is None:
-            action_node = self.belief_tree_index.action_map.get_action_node(step_result.action)
+            action_node = self.belief_tree_index.action_map.get_action_node(
+                step_result.action
+            )
             if action_node is None:
                 # I grabbed a child belief node that doesn't have an action node. Use rollout from here on out.
-                #console(2, module, "Reached branch with no leaf nodes, using random rollout to finish the episode")
+                # console(2, module, "Reached branch with no leaf nodes, using random rollout to finish the episode")
                 self.disable_tree = True
                 return
 
@@ -189,30 +200,49 @@ class BeliefTreeSolver(Solver):
             for entry in obs_mapping_entries:
                 if entry.child_node is not None:
                     child_belief_node = entry.child_node
-                    #console(2, module, "Had to grab nearest belief node...variance added")
+                    # console(2, module, "Had to grab nearest belief node...variance added")
                     break
 
         # If the new root does not yet have the max possible number of particles add some more
         if child_belief_node.state_particles.__len__() < self.model.max_particle_count:
-            #print("adding new particles")
-            num_to_add = self.model.max_particle_count - child_belief_node.state_particles.__len__()
+            # print("adding new particles")
+            num_to_add = (
+                self.model.max_particle_count
+                - child_belief_node.state_particles.__len__()
+            )
 
             # Generate particles for the new root node (*** CHANGE ***)
-            is_mdp = bool(self.model.solver == 'MCP')
-            child_belief_node.state_particles += self.model.generate_particles(self.belief_tree_index, step_result.action,
-                                                                               step_result.observation, num_to_add,
-                                                                               self.belief_tree_index.state_particles, mdp=is_mdp)
+            is_mdp = bool(self.model.solver == "MCP")
+            child_belief_node.state_particles += self.model.generate_particles(
+                self.belief_tree_index,
+                step_result.action,
+                step_result.observation,
+                num_to_add,
+                self.belief_tree_index.state_particles,
+                mdp=is_mdp,
+            )
 
             # If that failed, attempt to create a new state particle set
             if child_belief_node.state_particles.__len__() == 0:
-                child_belief_node.state_particles += self.model.generate_particles_uninformed(self.belief_tree_index,
-                                                                                              step_result.action,
-                                                                                              step_result.observation,
-                                                                                        self.model.min_particle_count)
+                child_belief_node.state_particles += (
+                    self.model.generate_particles_uninformed(
+                        self.belief_tree_index,
+                        step_result.action,
+                        step_result.observation,
+                        self.model.min_particle_count,
+                    )
+                )
 
         # Failed to continue search- ran out of particles
-        if child_belief_node is None or child_belief_node.state_particles.__len__() == 0:
-            console(1, module, "Couldn't refill particles, must use random rollout to finish episode")
+        if (
+            child_belief_node is None
+            or child_belief_node.state_particles.__len__() == 0
+        ):
+            console(
+                1,
+                module,
+                "Couldn't refill particles, must use random rollout to finish episode",
+            )
             self.disable_tree = True
             return
 
