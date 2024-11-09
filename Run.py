@@ -248,7 +248,7 @@ def get_env(seed=None):
 
     elif env_name == "KOutOfN":
         smax = 4
-        n = 5
+        n = 4
         if env_size != 0:
             n = env_size
         env = KOutOfN(n=n, smax=smax)
