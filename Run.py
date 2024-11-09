@@ -43,6 +43,7 @@ from AM_Gyms.frozen_lake_v2 import FrozenLakeEnv_v2
 from AM_Gyms.Sepsis.SepsisEnv import SepsisEnv
 from AM_Gyms.Blackjack import BlackjackEnv
 from AM_Gyms.frozen_lake import FrozenLakeEnv, generate_random_map, is_valid
+from AM_Gyms.k_out_of_n import KOutOfN
 
 # Environment wrappers
 from AM_Gyms.AM_Env_wrapper import AM_ENV as wrapper
@@ -244,6 +245,16 @@ def get_env(seed=None):
         StateSize, ActionSize, s_init = 704, 2, -1
         if MeasureCost == -1:
             MeasureCost = 0.05
+
+    elif env_name == "KOutOfN":
+        smax = 4
+        n = 5
+        if env_size != 0:
+            n = env_size
+        env = KOutOfN(n=n, smax=smax)
+        if MeasureCost == -1:
+            MeasureCost = 0.05
+        StateSize, ActionSize, s_init = smax**n, 2**n, 0
 
     else:
         print("Environment {} not recognised, please try again!".format(env_name))
