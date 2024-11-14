@@ -285,7 +285,7 @@ def get_agent(seed=None):
         agent = BAM_QMDP(ENV, offline_training_steps=0)
     # BAM_QMDP, named Dyna-ATMQ in paper. Variant with 25 offline training steps per real step
     elif algo_name == "BAM_QMDP+":
-        agent = BAM_QMDP(ENV, offline_training_steps=5)
+        agent = BAM_QMDP(ENV, offline_training_steps=25)
     # Observe-then-plan agent from ACNO-paper. As used in paper, slight alterations made from original
     elif algo_name == "ACNO_OTP":
         ENV_ACNO = ACNO_ENV(ENV)
