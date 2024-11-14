@@ -52,10 +52,8 @@ class BAM_QMDP:
         )  # Minimum Measurement Regret for which a measurement is taken (currently equal to measurement cost)
         self.optimisticPenalty = 1  # Maximum return estimate (Rewards in all environments are normalised such that this is always 1)
 
-        if offline_training_steps > 0:
-            self.otsteps = round(0.2 * self.StateSize)  # Offline_training_steps
-        else:
-            self.otsteps = 0
+        self.otsteps = offline_training_steps
+
         self.offline_epsilon = 0.25
         self.epsilon_measure = 0.0
         self.max_steps_without_measuring = self.StateSize
@@ -90,7 +88,6 @@ class BAM_QMDP:
             (self.StateSize), dtype=np.longfloat
         )  # Q-value of optimal action as given by Q (used for readability)
         self.QCounter = np.zeros((self.StateSize, self.ActionSize))
-        self.Qorder = range(self.StateSize)
 
         self.QTable[self.doneState] = 0
 
@@ -203,11 +200,7 @@ class BAM_QMDP:
 
                 # 8: Update Q
 
-                self.update_Q_lastStep_only(s, action, reward, isDone=self.is_done)
-
-            # if self.otsteps > 0:
-            #     for i in range(self.otsteps):
-            #         self.train_offline()
+            self.update_Q_lastStep_only(s, action, reward, isDone=self.is_done)
 
             # 9: Update variables for next step:
 
@@ -222,9 +215,8 @@ class BAM_QMDP:
         for b, a in reversed(history):
             self.update_Q_lastStep_only(b, a, isReal=False)
 
-        if self.otsteps > 0:
-            for i in range(self.otsteps):
-                self.train_after_episode()
+        for i in range(self.otsteps):
+            self.train_offline()
 
         self.totalReward += self.episodeReward
         returnVars = (self.episodeReward, self.steps_taken, self.measurements_taken)
@@ -255,7 +247,7 @@ class BAM_QMDP:
 
             epreward[i], epsteps[i], epms[i] = self.run_episode()
 
-        if False:
+        if print_info:
             print(
                 """
 Run complete: 
@@ -471,37 +463,15 @@ Rewards Table: {}
                 self.QTable[s1, action] = 1
 
     def train_offline(self):
-        "Performs Dyna-style oflline training of Q-values using current transition function"
-        for i in range(self.otsteps):
-            # Choose random state and action
-            s = np.random.randint(self.StateSize - 1)
-            S_dict = {s: 1}
+        "Performs Dyna-style oflline training of Q-values using current transition function once"
+        # Choose random state and action
+        s = np.random.randint(self.StateSize - 1)
+        S_dict = {s: 1}
 
-            if np.random.rand() < self.offline_epsilon:
-                a = np.random.randint(self.ActionSize)
-            else:
-                a = self.get_action(S_dict)
+        if np.random.rand() < self.offline_epsilon:
+            a = np.random.randint(self.ActionSize)
+        else:
+            a = self.get_action(S_dict)
 
-            if np.sum(self.alpha[s, a]) > 5:
-                # b_next = self.guess_next_state(S_dict,a)
-                self.update_Q_lastStep_only(S_dict, a, isReal=False)
-
-    def train_after_episode(self):
-        self.update_Qorder()
-        S = np.array(range(self.StateSize))[self.Qorder]
-        idxs = np.random.choice(self.StateSize, size=self.otsteps, replace=False)
-        mask = np.zeros(self.StateSize, dtype="bool")
-        mask[idxs] = True
-        S = S[mask]
-
-        for s in S:
-            if np.random.rand() < self.offline_epsilon:
-                a = np.random.randint(self.ActionSize)
-            else:
-                a = self.get_action({s: 1})
-            if np.sum(self.alpha[s, a]) > 5:
-                # b_next = self.guess_next_state(S_dict,a)
-                self.update_Q_lastStep_only({s: 1}, a, isReal=False)
-
-    def update_Qorder(self):
-        self.Qorder = np.argsort(self.Qmax[self.Qorder])
+        if np.sum(self.alpha[s, a]) > 5:
+            self.update_Q_lastStep_only(S_dict, a, isReal=False)
