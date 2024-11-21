@@ -45,8 +45,8 @@ from AM_Gyms.Loss_Env import Measure_Loss_Env
 from AM_Gyms.frozen_lake_v2 import FrozenLakeEnv_v2
 from AM_Gyms.Sepsis.SepsisEnv import SepsisEnv
 from AM_Gyms.Blackjack import BlackjackEnv
-from AM_Gyms.frozen_lake import FrozenLakeEnv, generate_random_map, is_valid
 from AM_Gyms.k_out_of_n import KOutOfN
+from gymnasium.envs.toy_text.frozen_lake import generate_random_map
 
 # Environment wrappers
 from AM_Gyms.AM_Env_wrapper import AM_ENV as wrapper
@@ -198,22 +198,38 @@ def get_env(seed=None):
             remake_env = True
 
         if env_variant == "det":
-            env = FrozenLakeEnv(
-                desc=desc, map_name=map_name, is_slippery=False, render_mode="rgb_array"
+            env = gym.make(
+                "FrozenLake-v1",
+                desc=desc,
+                map_name=map_name,
+                is_slippery=False,
+                render_mode="rgb_array",
             )
             env = RecordVideo(
                 env,
                 video_folder="videos",
                 name_prefix="training",
                 episode_trigger=lambda x: x % 100 == 0,
+                # video_length=1000,
                 disable_logger=True,
+                fps=10,
             )
         elif env_variant == "slippery":
-            env = FrozenLakeEnv(desc=desc, map_name=map_name, is_slippery=True)
+            env = gym.make(
+                "FrozenLake-v1",
+                desc=desc,
+                map_name=map_name,
+                is_slippery=True,
+            )
         elif env_variant == "semi-slippery":
             env = FrozenLakeEnv_v2(desc=desc, map_name=map_name)
         elif env_variant == None:
-            env = FrozenLakeEnv(desc=desc, map_name=map_name, is_slippery=False)
+            env = gym.make(
+                "FrozenLake-v1",
+                desc=desc,
+                map_name=map_name,
+                is_slippery=False,
+            )
         else:  # default = deterministic
             print("Environment var not recognised! (using deterministic variant)")
             env = FrozenLakeEnv(desc=desc, map_name=map_name, is_slippery=False)
