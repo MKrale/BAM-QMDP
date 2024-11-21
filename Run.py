@@ -205,35 +205,45 @@ def get_env(seed=None):
                 is_slippery=False,
                 render_mode="rgb_array",
             )
-            env = RecordVideo(
-                env,
-                video_folder="videos",
-                name_prefix="training",
-                episode_trigger=lambda x: x % 100 == 0,
-                # video_length=1000,
-                disable_logger=True,
-                fps=10,
-            )
         elif env_variant == "slippery":
             env = gym.make(
                 "FrozenLake-v1",
                 desc=desc,
                 map_name=map_name,
                 is_slippery=True,
+                render_mode="rgb_array",
             )
         elif env_variant == "semi-slippery":
-            env = FrozenLakeEnv_v2(desc=desc, map_name=map_name)
+            env = FrozenLakeEnv_v2(
+                desc=desc, map_name=map_name, render_mode="rgb_array"
+            )
         elif env_variant == None:
             env = gym.make(
                 "FrozenLake-v1",
                 desc=desc,
                 map_name=map_name,
                 is_slippery=False,
+                render_mode="rgb_array",
             )
         else:  # default = deterministic
             print("Environment var not recognised! (using deterministic variant)")
-            env = FrozenLakeEnv(desc=desc, map_name=map_name, is_slippery=False)
+            env = gym.make(
+                "FrozenLake-v1",
+                desc=desc,
+                map_name=map_name,
+                is_slippery=False,
+                render_mode="rgb_array",
+            )
 
+        env = RecordVideo(
+            env,
+            video_folder="videos",
+            name_prefix="training",
+            episode_trigger=lambda x: x == 0,
+            video_length=1000,
+            disable_logger=True,
+            fps=30,
+        )
         # Taxi environment, as used in AMRL-Q paper. Not used in paper
     elif env_name == "Taxi":
         env = gym.make("Taxi-v3")
