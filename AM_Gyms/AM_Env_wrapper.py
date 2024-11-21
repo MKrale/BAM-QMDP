@@ -1,6 +1,7 @@
 # Wrapper to turn Open AI Gym-environments into active measure environments
 import numpy as np
 import math as m
+
 import matplotlib.pyplot as plt
 
 
@@ -53,7 +54,7 @@ class AM_ENV:
 
     def step(self, action, s=None):
         "Perform action on environment, without returning an observation"
-        (obs, reward, done, info) = self.env.step(action)
+        (obs, reward, done, truncated, info) = self.env.step(action)
         self.obs = obs
         reward = reward * self.reward_factor
 

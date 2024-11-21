@@ -5,9 +5,9 @@ from typing import List, Optional
 
 import numpy as np
 
-from gym import Env, spaces, utils
-from gym.envs.toy_text.utils import categorical_sample
-from gym.error import DependencyNotInstalled
+from gymnasium import Env, spaces, utils
+from gymnasium.envs.toy_text.utils import categorical_sample
+from gymnasium.error import DependencyNotInstalled
 
 LEFT = 0
 DOWN = 1
@@ -230,7 +230,7 @@ class FrozenLakeEnv(Env):
 
         if self.render_mode == "human":
             self.render()
-        return (int(s), r, t, (False, {"prob": p}))
+        return (int(s), r, t, False, (False, {"prob": p}))
 
     def reset(
         self,

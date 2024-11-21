@@ -18,8 +18,11 @@ sys.path.append(os.path.join(sys.path[0], "Baselines", "ACNO_generalised"))
 
 # External modules
 import numpy as np
-import gym
-import matplotlib.pyplot as plt
+import gymnasium as gym
+from gymnasium.wrappers import RecordVideo
+
+# makes sure gym doesnt crash on a warning
+# gym.logger.min_level = 40
 import time as t
 import datetime
 import json
@@ -195,7 +198,16 @@ def get_env(seed=None):
             remake_env = True
 
         if env_variant == "det":
-            env = FrozenLakeEnv(desc=desc, map_name=map_name, is_slippery=False)
+            env = FrozenLakeEnv(
+                desc=desc, map_name=map_name, is_slippery=False, render_mode="rgb_array"
+            )
+            env = RecordVideo(
+                env,
+                video_folder="videos",
+                name_prefix="training",
+                episode_trigger=lambda x: x % 100 == 0,
+                disable_logger=True,
+            )
         elif env_variant == "slippery":
             env = FrozenLakeEnv(desc=desc, map_name=map_name, is_slippery=True)
         elif env_variant == "semi-slippery":

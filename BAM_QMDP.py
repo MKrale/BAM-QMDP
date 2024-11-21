@@ -6,10 +6,6 @@ This file contains an agent for BAM-QMDP, an algorithm to find policies through 
 A full and formal description can be found in the accompanying paper. 
 """
 
-import warnings
-import sys
-
-warnings.filterwarnings("error")
 from csv import QUOTE_ALL
 from functools import total_ordering
 import numpy as np
@@ -77,7 +73,7 @@ class BAM_QMDP:
 
         # Value Estimation Tables
         self.QTable = (
-            np.ones((self.StateSize, self.ActionSize), dtype=np.longfloat)
+            np.ones((self.StateSize, self.ActionSize), dtype=np.longdouble)
             * self.optimisticPenalty
         )  # Q-table as used by other functions, includes initial bias
 
@@ -85,7 +81,7 @@ class BAM_QMDP:
             (self.StateSize, self.ActionSize)
         )  # Record average immidiate reward for (s,a) (called \hat{R} in report)
         self.Qmax = np.zeros(
-            (self.StateSize), dtype=np.longfloat
+            (self.StateSize), dtype=np.longdouble
         )  # Q-value of optimal action as given by Q (used for readability)
         self.QCounter = np.zeros((self.StateSize, self.ActionSize))
 
@@ -108,7 +104,7 @@ class BAM_QMDP:
 
         self.ChangedStates = {}
         self.T = np.zeros(
-            (self.StateSize, self.ActionSize, self.StateSize), dtype=np.longfloat
+            (self.StateSize, self.ActionSize, self.StateSize), dtype=np.longdouble
         )  # States to be checked in global Q update
         # Other vars:
         self.totalReward = 0  # reward over all episodes
