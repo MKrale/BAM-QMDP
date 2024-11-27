@@ -1,4 +1,3 @@
-# %%
 import gym
 from gym import spaces
 from gym.utils import seeding
@@ -121,6 +120,3 @@ class FireEscape(gym.Env):
         self.generate_random_fires()
 
         return self.to_s(self.components)
-
-
-# %%
