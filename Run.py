@@ -239,17 +239,39 @@ def get_env(seed=None):
             env,
             video_folder="videos",
             name_prefix="training",
-            episode_trigger=lambda x: x == 0,
-            video_length=1000,
+            # episode_trigger=lambda x: x % 50 == 0,
             disable_logger=True,
-            fps=30,
+            fps=4,
         )
         # Taxi environment, as used in AMRL-Q paper. Not used in paper
     elif env_name == "Taxi":
-        env = gym.make("Taxi-v3")
+        env = gym.make("Taxi-v3", render_mode="rgb_array")
         StateSize, ActionSize, s_init = 500, 6, -1
         if MeasureCost == -1:
             MeasureCost = MeasureCost_Taxi_default
+        env = RecordVideo(
+            env,
+            video_folder="videos",
+            name_prefix="training",
+            episode_trigger=lambda x: x % 100 == 0,
+            video_length=10000,
+            disable_logger=True,
+            fps=10,
+        )
+    elif env_name == "CliffWalking":
+        env = gym.make("CliffWalking-v0", render_mode="rgb_array", is_slippery=True)
+        StateSize, ActionSize, s_init = 37, 4, 36
+        if MeasureCost == -1:
+            MeasureCost = MeasureCost_Taxi_default
+        env = RecordVideo(
+            env,
+            video_folder="videos",
+            name_prefix="training",
+            # episode_trigger=lambda x: x % 10 == 0,
+            # video_length=10000,
+            disable_logger=True,
+            # fps=10,
+        )
 
         # Chain environment, as used in AMRL-Q paper. Not used in paper
     elif env_name == "Chain":
@@ -283,6 +305,15 @@ def get_env(seed=None):
         StateSize, ActionSize, s_init = 704, 2, -1
         if MeasureCost == -1:
             MeasureCost = 0.05
+        env = RecordVideo(
+            env,
+            video_folder="videos",
+            name_prefix="training",
+            episode_trigger=lambda x: x == 0,
+            video_length=40,
+            disable_logger=True,
+            # fps=10,
+        )
 
     elif env_name == "KOutOfN":
         smax = 4
