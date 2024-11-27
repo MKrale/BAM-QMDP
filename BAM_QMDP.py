@@ -109,7 +109,6 @@ class BAM_QMDP:
         # Other vars:
         self.totalReward = 0  # reward over all episodes
         self.totalSteps = 0  # steps over all episodes
-        self.init_episode_variables()
 
     def init_episode_variables(self):
         "Initialises all episode-specific variables"
