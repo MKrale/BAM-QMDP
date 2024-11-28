@@ -121,14 +121,5 @@ def get_env(env_name, env_gen, env_variant, env_size, remake_env_opt, seed=None)
         return
 
     env = ActiveMeasurementWrapper(env)
-    env = RecordVideo(
-        env,
-        video_folder="videos",
-        name_prefix="training",
-        # episode_trigger=lambda x: x == 0,
-        # video_length=5000,
-        disable_logger=True,
-        fps=10,
-    )
 
     return env, InitialState, default_measure_cost, remake_env

@@ -8,6 +8,7 @@ import time as t
 import datetime
 import json
 import argparse
+from gymnasium.wrappers import RecordVideo
 
 from GetEnv import get_env
 from GetAgent import get_agent
@@ -52,6 +53,21 @@ parser.add_argument(
     help="Option to make a new (random) environment each run or not",
 )
 parser.add_argument("-save", default=True, help="Option to save or not save data.")
+parser.add_argument(
+    "-record_videos",
+    default=False,
+    help="Save videos of every episode that is a power of 3 until 1000 and then every 1000 episodes.",
+)
+parser.add_argument(
+    "-video_directory",
+    default="videos",
+    help="Directory to store the videos of the episodes in (default: ./videos).",
+)
+parser.add_argument(
+    "-video_prefix",
+    default="training",
+    help="Prefix for video filenames.",
+)
 
 # Unpacking for use in this file:
 args = parser.parse_args()
@@ -66,13 +82,16 @@ nmbr_runs = int(args.nmbr_runs)
 file_name = args.f
 rep_name = args.rep
 remake_env_opt = True
-
 if args.env_remake in ["False", "false", 0]:
     remake_env_opt = False
+doSave = True
 if args.save in ["False", "false", 0]:
     doSave = False
-else:
-    doSave = True
+record_videos = False
+if args.record_videos in ["True", "true", 1]:
+    record_videos = True
+video_directory = args.video_directory
+video_prefix = args.video_prefix
 
 
 ######################################################
@@ -84,8 +103,20 @@ env, InitialState, default_measure_cost, remake_env = get_env(
 )
 if measure_cost == -1:
     measure_cost = default_measure_cost
-agent = get_agent(env, algo_name, measure_cost, InitialState)
 
+if record_videos:
+    env = RecordVideo(
+        env,
+        video_folder=video_directory,
+        name_prefix=video_prefix,
+        # create custom episode trigger:
+        # episode_trigger=lambda x: x % 2 == 0,
+        # specify video length for videos to span multiple episodes:
+        # video_length=5000,
+        fps=10,
+    )
+
+agent = get_agent(env, algo_name, measure_cost, InitialState)
 
 ######################################################
 ###     Exporting Results       ###
