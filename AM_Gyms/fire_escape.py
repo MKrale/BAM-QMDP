@@ -1,6 +1,6 @@
-import gym
-from gym import spaces
-from gym.utils import seeding
+import gymnasium as gym
+from gymnasium import spaces
+from gymnasium.utils import seeding
 import numpy as np
 
 LEFT = 0
@@ -13,10 +13,17 @@ MEASURE = 4
 class FireEscape(gym.Env):
     """ """
 
-    def __init__(self, size=5, fires=3, measure_cost=0.1):
+    def __init__(
+        self,
+        size=5,
+        fires=3,
+        measure_cost=0.1,
+        render_mode=None,
+    ):
         self.size = size
         self.fires = fires
         self.measure_cost = measure_cost
+        self.render_mode = render_mode
 
         self.player = (0, 0)
         self.generate_random_fires()
@@ -25,10 +32,16 @@ class FireEscape(gym.Env):
         self.action_space = spaces.Discrete(5)
         # observation space is state and whether there is smoke
         # or, state + locations of fire
-        # self.observation_space = spaces.OneOf(
-        #     spaces.Tuple([spaces.Discrete(self.n * self.n), spaces.Discrete(2)]),
-        #     spaces.Tuple([spaces.Discrete(self.smax**self.n), spaces.Discrete(2)]),
-        # )
+        self.observation_space = spaces.OneOf(
+            (
+                spaces.Tuple(
+                    (spaces.Discrete(self.size * self.size), spaces.Discrete(2))
+                ),
+                spaces.Tuple(
+                    (spaces.Discrete(self.size * self.size), spaces.MultiBinary(4))
+                ),
+            ),
+        )
 
     def int_to_space(self, n: int):
         return (n // self.size, n % self.size)
@@ -52,7 +65,7 @@ class FireEscape(gym.Env):
         self.np_random, seed = seeding.np_random(seed)
         return [seed]
 
-    def step(self, action, log=True):
+    def step(self, action):
         x, y = self.player
         if action == LEFT:
             if x > 0:
@@ -78,10 +91,11 @@ class FireEscape(gym.Env):
                 up = True
             return (self.player, (left, down, right, up)), -self.measure_cost, False, {}
 
-        if log:
+        self.player = (x, y)
+
+        if self.render_mode is not None:
             self.render()
 
-        self.player = (x, y)
         # detect smoke (i.e. fire in adjacent cell)
         smoke = False
         if (
@@ -103,15 +117,16 @@ class FireEscape(gym.Env):
         return (self.player, smoke), 0, False, {}
 
     def render(self):
-        for y in range(self.size - 1, -1, -1):
-            for x in range(self.size):
-                if (x, y) == self.player:
-                    print("+", end="")
-                elif self.fire_locations[x][y]:
-                    print("x", end="")
-                else:
-                    print("_", end="")
-            print("")
+        if self.render_mode == "ansi":
+            for y in range(self.size - 1, -1, -1):
+                for x in range(self.size):
+                    if (x, y) == self.player:
+                        print("+", end="")
+                    elif self.fire_locations[x][y]:
+                        print("x", end="")
+                    else:
+                        print("_", end="")
+                print("")
 
     def reset(self, seed=None):
         super().reset(seed=seed)
