@@ -1,67 +1,16 @@
 """
 File for running & gathering data on Active-Measuring algorithms.
 For a brief description of how to use it, see the Readme-file in this repo.
-
 """
 
-######################################################
-###             Imports                 ###
-######################################################
-
-
-# File structure stuff
-import sys
-import os
-
-sys.path.append(os.path.join(sys.path[0], "Baselines"))
-sys.path.append(os.path.join(sys.path[0], "Baselines", "ACNO_generalised"))
-
-# External modules
 import numpy as np
-import gymnasium as gym
-from gymnasium.wrappers import RecordVideo
-
-# makes sure gym doesnt crash on a warning
-# gym.logger.min_level = 40
 import time as t
 import datetime
 import json
 import argparse
-from typing import List, Optional
-import os
 
-# Agents
-import Baselines.AMRL_Agent as amrl
-from BAM_QMDP import BAM_QMDP
-
-# from Baselines.ACNO_generalised.Observe_then_plan_agent import ACNO_Agent_OTP
-
-# from Baselines.DRQN import DRQN_Agent requires torch to be downloaded, so kept turned off
-from Baselines.DynaQ import QBasic, QOptimistic, QDyna
-
-# Environments
-from AM_Gyms.NchainEnv import NChainEnv
-from AM_Gyms.Loss_Env import Measure_Loss_Env
-from AM_Gyms.frozen_lake_v2 import FrozenLakeEnv_v2
-from AM_Gyms.Sepsis.SepsisEnv import SepsisEnv
-from AM_Gyms.Blackjack import BlackjackEnv
-from AM_Gyms.k_out_of_n import KOutOfN
-from gymnasium.envs.toy_text.frozen_lake import generate_random_map
-
-# Environment wrappers
-from AM_Gyms.AM_Env_wrapper import AM_ENV as wrapper
-from AM_Gyms.AM_Env_wrapper import AM_Visualiser as visualiser
-from AM_Gyms.ActiveMeasurementWrapper import ActiveMeasurementWrapper
-
-# from Baselines.ACNO_generalised.ACNO_ENV import ACNO_ENV
-
-
-# JSON encoder
-class NumpyEncoder(json.JSONEncoder):
-    def default(self, obj):
-        if isinstance(obj, np.ndarray):
-            return obj.tolist()
-        return json.JSONEncoder.default(self, obj)
+from GetEnv import get_env
+from GetAgent import get_agent
 
 
 ######################################################
@@ -89,13 +38,13 @@ parser.add_argument(
     default=-1.0,
     help="Cost of measuring (default: use as specified by environment)",
 )
-parser.add_argument("-nmbr_eps", default=500, help="nmbr of episodes per run")
-parser.add_argument("-nmbr_runs", default=1, help="nmbr of runs to perform")
+parser.add_argument("-nmbr_eps", default=500, help="Number of episodes per run")
+parser.add_argument("-nmbr_runs", default=1, help="Number of runs to perform")
 parser.add_argument(
     "-f", default=None, help="File name (default: generated automatically)"
 )
 parser.add_argument(
-    "-rep", default="./Data/", help="Repository to store data (default: ./Data"
+    "-rep", default="./Data/", help="Repository to store data (default: ./Data)"
 )
 parser.add_argument(
     "-env_remake",
@@ -111,20 +60,45 @@ env_name = args.env
 env_variant = args.env_var
 env_size = int(args.env_size)
 env_gen = str(args.env_gen)
-MeasureCost = float(args.m_cost)
+measure_cost = float(args.m_cost)
 nmbr_eps = int(args.nmbr_eps)
 nmbr_runs = int(args.nmbr_runs)
 file_name = args.f
 rep_name = args.rep
 remake_env_opt = True
 
-if args.env_remake in ["False", "false"]:
+if args.env_remake in ["False", "false", 0]:
     remake_env_opt = False
-
-if args.save == "False" or args.save == "false":
+if args.save in ["False", "false", 0]:
     doSave = False
 else:
     doSave = True
+
+
+######################################################
+###     Getting environment and agent       ###
+######################################################
+
+env, InitialState, default_measure_cost, remake_env = get_env(
+    env_name, env_gen, env_variant, env_size, remake_env_opt, seed=0
+)
+if measure_cost == -1:
+    measure_cost = default_measure_cost
+agent = get_agent(env, algo_name, measure_cost, InitialState)
+
+
+######################################################
+###     Exporting Results       ###
+######################################################
+
+
+# JSON encoder
+class NumpyEncoder(json.JSONEncoder):
+    def default(self, obj):
+        if isinstance(obj, np.ndarray):
+            return obj.tolist()
+        return json.JSONEncoder.default(self, obj)
+
 
 # Create name for Data file
 envFullName = env_name
@@ -134,288 +108,11 @@ if env_size != 0:
 if env_variant != "None":
     envFullName += "_" + env_variant
 
-######################################################
-###     Intitialise Environment        ###
-######################################################
-
-# Lake Envs
-s_init = 0
-MeasureCost_Lake_default = 0.05
-MeasureCost_Taxi_default = 0.01 / 20
-MeasureCost_Chain_default = 0.05
-remake_env = False
-env_folder_name = os.path.join(os.getcwd(), "AM_Gyms", "Learned_Models")
-
-
-def get_env(seed=None):
-    "Returns AM_Env as specified in global (user-specified) vars"
-    global MeasureCost
-    global remake_env
-    global env_size
-    global env_full_name
-
-    # Required for making robust env through generic-gym class
-    has_terminal_state = True
-    terminal_prob = 0.0
-
-    np.random.seed(seed)
-
-    # Basically, just a big messy pile of if/else statements (Not using match for pre 3.10 python users)
-
-    # Loss-environment, called Measure Regret environment in paper.
-    if env_name == "Loss":
-        env = Measure_Loss_Env()
-        StateSize, ActionSize, s_init = 4, 2, 0
-        if MeasureCost == -1:
-            MeasureCost = 0.1
-
-        # Frozen lake environment (includes all variants)
-    elif env_name == "Lake":
-        ActionSize, s_init = 4, 0
-        if MeasureCost == -1:
-            MeasureCost = MeasureCost_Lake_default
-        if env_size == 0:
-            print("Using standard size map (4x4)")
-            env_size = 4
-            StateSize = 4**2
-        else:
-            StateSize = env_size**2
-
-        if env_gen == "random":
-            map_name = None
-            desc = generate_random_map(size=env_size)
-        elif env_gen == "standard":
-            if env_size != 4 and env_size != 8:
-                print("Standard map type can only be used for sizes 4 and 8")
-            else:
-                map_name = "{}x{}".format(env_size, env_size)
-                desc = None
-        else:
-            print("Using random map")
-            map_name = None
-            desc = generate_random_map(size=env_size)
-
-        if map_name is None and remake_env_opt:
-            remake_env = True
-
-        if env_variant == "det":
-            env = gym.make(
-                "FrozenLake-v1",
-                desc=desc,
-                map_name=map_name,
-                is_slippery=False,
-                render_mode="rgb_array",
-            )
-        elif env_variant == "slippery":
-            env = gym.make(
-                "FrozenLake-v1",
-                desc=desc,
-                map_name=map_name,
-                is_slippery=True,
-                render_mode="rgb_array",
-            )
-        elif env_variant == "semi-slippery":
-            env = FrozenLakeEnv_v2(
-                desc=desc, map_name=map_name, render_mode="rgb_array"
-            )
-        elif env_variant == None:
-            env = gym.make(
-                "FrozenLake-v1",
-                desc=desc,
-                map_name=map_name,
-                is_slippery=False,
-                render_mode="rgb_array",
-            )
-        else:  # default = deterministic
-            print("Environment var not recognised! (using deterministic variant)")
-            env = gym.make(
-                "FrozenLake-v1",
-                desc=desc,
-                map_name=map_name,
-                is_slippery=False,
-                render_mode="rgb_array",
-            )
-        # Taxi environment, as used in AMRL-Q paper. Not used in paper
-    elif env_name == "Taxi":
-        env = gym.make("Taxi-v3", render_mode="rgb_array")
-        StateSize, ActionSize, s_init = 500, 6, -1
-        if MeasureCost == -1:
-            MeasureCost = MeasureCost_Taxi_default
-        # env = ActiveMeasurementWrapper(env, initial_state=s_init)
-        # env = RecordVideo(
-        #     env,
-        #     video_folder="videos",
-        #     name_prefix="training",
-        #     episode_trigger=lambda x: x % 100 == 0,
-        #     video_length=10000,
-        #     disable_logger=True,
-        #     fps=10,
-        # )
-    elif env_name == "CliffWalking":
-        env = gym.make("CliffWalking-v0", render_mode="rgb_array", is_slippery=True)
-        StateSize, ActionSize, s_init = 37, 4, 36
-        if MeasureCost == -1:
-            MeasureCost = MeasureCost_Taxi_default
-        env = RecordVideo(
-            env,
-            video_folder="videos",
-            name_prefix="training",
-            # episode_trigger=lambda x: x % 10 == 0,
-            # video_length=10000,
-            disable_logger=True,
-            # fps=10,
-        )
-
-        # Chain environment, as used in AMRL-Q paper. Not used in paper
-    elif env_name == "Chain":
-        if env_size == "10":
-            StateSize = 10
-        elif env_size == "20":
-            StateSize = 20
-        elif env_size == "30":
-            StateSize = 30
-        elif env_size == "50":
-            StateSize = 50
-        elif env_size == other:  # default
-            print("env_map not recognised!")
-            StateSize = 20
-
-        env = NChainEnv(StateSize)
-        ActionSize, s_init = 2, 0
-        if MeasureCost == -1:
-            MeasureCost = MeasureCost_Chain_default
-
-        # Sepsis environment, as used in ACNO-paper. Not used in paper
-    elif env_name == "Sepsis":
-        env = SepsisEnv()
-        StateSize, ActionSize, s_init = 720, 8, -1
-        if MeasureCost == -1:
-            MeasureCost = 0.05
-
-        # Standard OpenAI Gym blackjack environment. Not used in paper
-    elif env_name == "Blackjack":
-        env = BlackjackEnv()
-        StateSize, ActionSize, s_init = 704, 2, -1
-        if MeasureCost == -1:
-            MeasureCost = 0.05
-        env = RecordVideo(
-            env,
-            video_folder="videos",
-            name_prefix="training",
-            episode_trigger=lambda x: x == 0,
-            video_length=40,
-            disable_logger=True,
-            # fps=10,
-        )
-
-    elif env_name == "KOutOfN":
-        smax = 4
-        n = 4
-        if env_size != 0:
-            n = env_size
-        env = KOutOfN(n=n, smax=smax)
-        if MeasureCost == -1:
-            MeasureCost = 0.05
-        StateSize, ActionSize, s_init = smax**n, 2**n, 0
-
-    else:
-        print("Environment {} not recognised, please try again!".format(env_name))
-        return
-
-    env = ActiveMeasurementWrapper(env)
-    env = RecordVideo(
-        env,
-        video_folder="videos",
-        name_prefix="training",
-        # episode_trigger=lambda x: x == 0,
-        # video_length=5000,
-        disable_logger=True,
-        fps=10,
-    )
-    args.m_cost = MeasureCost
-
-    return env, StateSize, ActionSize, MeasureCost, s_init
-
-
-######################################################
-###     Defining Agents        ###
-######################################################
-
-
-# Both final names and previous/working names are implemented here
-def get_agent(seed=None):
-
-    ENV, StateSize, ActionSize, MeasureCost, InitialState = get_env(seed)
-    if algo_name == "AMRL":
-        agent = amrl.AMRL_Agent(
-            ENV,
-            StateSize=StateSize,
-            ActionSize=ActionSize,
-            MeasureCost=MeasureCost,
-            InitialState=InitialState,
-            turn_greedy=True,
-        )
-    # AMRL-Q, alter so it is completely greedy in last steps.
-    elif algo_name == "AMRL_greedy":
-        agent = amrl.AMRL_Agent(
-            ENV,
-            StateSize=StateSize,
-            ActionSize=ActionSize,
-            MeasureCost=MeasureCost,
-            InitialState=InitialState,
-            turn_greedy=False,
-        )
-    # BAM_QMDP, named Dyna-ATMQ in paper. Variant with no offline training
-    elif algo_name == "BAM_QMDP":
-        agent = BAM_QMDP(
-            ENV,
-            offline_training_steps=0,
-            StateSize=StateSize,
-            ActionSize=ActionSize,
-            MeasureCost=MeasureCost,
-            InitialState=InitialState,
-        )
-    # BAM_QMDP, named Dyna-ATMQ in paper. Variant with 25 offline training steps per real step
-    elif algo_name == "BAM_QMDP+":
-        agent = BAM_QMDP(
-            ENV,
-            offline_training_steps=25,
-            StateSize=StateSize,
-            ActionSize=ActionSize,
-            MeasureCost=MeasureCost,
-            InitialState=InitialState,
-        )
-    # Observe-then-plan agent from ACNO-paper. As used in paper, slight alterations made from original
-    elif algo_name == "ACNO_OTP":
-        ENV_ACNO = ACNO_ENV(ENV)
-        agent = ACNO_Agent_OTP(ENV_ACNO)
-    # A number of generic RL-agents. We did not include these in the paper.
-    # elif algo_name == "DRQN":
-    #         agent = DRQN_Agent(ENV)
-    elif algo_name == "QBasic":
-        agent = QBasic(ENV)
-    elif algo_name == "QOptimistic":
-        agent = QOptimistic(ENV)
-    elif algo_name == "QDyna":
-        agent = QDyna(ENV)
-    else:
-        print("Agent {} not recognised, please try again!".format(algo_name))
-    return agent
-
-
-######################################################
-###     Exporting Results       ###
-######################################################
-
 # Automatically creates filename is not specified by user
 if file_name == None:
     file_name = "AMData_{}_{}_{}.json".format(
-        algo_name, envFullName, str(int(float(args.m_cost) * 100)).zfill(3)
+        algo_name, envFullName, str(int(float(measure_cost) * 100)).zfill(3)
     )
-
-# Set measurecost if not set by environment.
-if args.m_cost == -1:
-    args.m_cost == MeasureCost
 
 
 def PR_to_data(pr_time):
@@ -469,7 +166,6 @@ nmbr episodes per run: {}.
     )
 )
 
-agent = get_agent(0)
 
 for i in range(nmbr_runs):
     t_this_start = t.perf_counter()

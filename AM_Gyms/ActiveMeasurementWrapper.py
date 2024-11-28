@@ -15,7 +15,6 @@ class ActiveMeasurementWrapper(gym.Wrapper):
 
     def __init__(self, env: gym.Env, measurement_cost=0.05, initial_state=-1):
         super().__init__(env)
-        self.action_space = spaces.Tuple((env.action_space, spaces.Discrete(2)))
         self.measurement_cost = measurement_cost
         self.last_step_measured = False
         self.initial_state = initial_state

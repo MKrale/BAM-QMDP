@@ -4,14 +4,14 @@ Currently unused and untested, so use at own risk!
 """
 
 from AM_Gyms.ModelLearner import ModelLearner
-from AM_Gyms.AM_Env_wrapper import AM_ENV
+from gymnasium import Env
 import numpy as np
 
 
 class QBasic:
     """Class for standard Q-learning of AM-environments"""
 
-    def __init__(self, ENV: AM_ENV):
+    def __init__(self, ENV: Env):
         self.env = ENV
         self.StateSize, self.ActionSize, self.MeasureCost, self.s_init = (
             self.env.get_vars()
@@ -117,7 +117,7 @@ class QOptimistic(QBasic):
 
 class QDyna(QBasic):
 
-    def __init__(self, ENV: AM_ENV):
+    def __init__(self, ENV: Env):
         super().__init__(ENV)
         self.R_counter = np.zeros((self.StateSize, self.ActionSize))
         self.trainingSteps = 10

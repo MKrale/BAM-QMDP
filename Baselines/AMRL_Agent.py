@@ -10,8 +10,6 @@ class AMRL_Agent:
     def __init__(
         self,
         env: gym.Env,
-        StateSize,
-        ActionSize,
         MeasureCost,
         InitialState=-1,
         epsilon=0.1,
@@ -21,10 +19,12 @@ class AMRL_Agent:
     ):
         # load all environment-specific variables
         self.env = env
-        self.StateSize = StateSize
-        self.ActionSize = ActionSize
         self.measureCost = MeasureCost
         self.s_init = InitialState
+
+        # we assume spaces are discrete, otherwise algorithms do not work
+        self.StateSize = env.observation_space.n
+        self.ActionSize = env.action_space.n
 
         # load all algo-specific vars (if provided)
         self.epsilon, self.m_bias = epsilon, m_bias

@@ -1,4 +1,5 @@
 import gymnasium as gym
+from gymnasium import spaces
 
 
 # extension upon gymnasium blackjack that converts observations to integers
@@ -8,7 +9,9 @@ class BlackjackEnv(gym.ObservationWrapper):
             "Blackjack-v1",
         )
         super().__init__(self.env)
-        self.observation_space = gym
+        # 11 possible dealer hand * 32 possible player hand * 2 for usable ace = 704
+        self.observation_space = spaces.Discrete(704)
+        self.action_space = spaces.Discrete(2)
 
     def observation(self, obs):
         player_hand, dealer_hand, usable_ace = obs

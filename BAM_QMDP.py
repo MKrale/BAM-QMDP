@@ -25,8 +25,6 @@ class BAM_QMDP:
     def __init__(
         self,
         env: gym.Env,
-        StateSize,
-        ActionSize,
         MeasureCost,
         InitialState=-1,
         epsilon=0.0,
@@ -35,10 +33,12 @@ class BAM_QMDP:
     ):
         # Environment arguments:
         self.env = env
-        self.StateSize = StateSize
-        self.ActionSize = ActionSize
         self.MeasureCost = MeasureCost
         self.s_init = InitialState
+
+        # we assume spaces are discrete, otherwise algorithms do not work
+        self.StateSize = env.observation_space.n
+        self.ActionSize = env.action_space.n
 
         self.StateSize = self.StateSize + 1  # Adding a Done-state
         self.doneState = self.StateSize - 1
