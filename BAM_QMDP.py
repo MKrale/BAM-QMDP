@@ -12,7 +12,7 @@ import numpy as np
 import math as m
 import time
 
-from AM_Gyms.AM_Env_wrapper import AM_ENV
+import gymnasium as gym
 
 
 class BAM_QMDP:
@@ -24,14 +24,14 @@ class BAM_QMDP:
 
     def __init__(
         self,
-        env: AM_ENV,
+        env: gym.Env,
         StateSize,
         ActionSize,
         MeasureCost,
+        InitialState=-1,
         epsilon=0.0,
         nmbr_particles=100,
         offline_training_steps=0,
-        InitialState=-1,
     ):
         # Environment arguments:
         self.env = env

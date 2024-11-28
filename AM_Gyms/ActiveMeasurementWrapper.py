@@ -22,6 +22,7 @@ class ActiveMeasurementWrapper(gym.Wrapper):
 
     def reset(self, seed=None, options=None):
         self.env.reset(seed=seed, options=options)
+        self.last_step_measured = False
         # do not return observation here
         return None, None
 

@@ -1,15 +1,30 @@
 ### Implementation of AMRL-Algorithm as described in https://arxiv.org/abs/2005.12697
 
 import numpy as np
+import gymnasium as gym
 
 
 class AMRL_Agent:
     """Creates a AMRL-Agent, as described in https://arxiv.org/abs/2005.12697"""
 
-    def __init__(self, env, epsilon=0.1, m_bias=0.1, turn_greedy=True, greedy_perc=0.9):
+    def __init__(
+        self,
+        env: gym.Env,
+        StateSize,
+        ActionSize,
+        MeasureCost,
+        InitialState=-1,
+        epsilon=0.1,
+        m_bias=0.1,
+        turn_greedy=True,
+        greedy_perc=0.9,
+    ):
         # load all environment-specific variables
         self.env = env
-        self.StateSize, self.ActionSize, self.measureCost, self.s_init = env.get_vars()
+        self.StateSize = StateSize
+        self.ActionSize = ActionSize
+        self.measureCost = MeasureCost
+        self.s_init = InitialState
 
         # load all algo-specific vars (if provided)
         self.epsilon, self.m_bias = epsilon, m_bias
@@ -131,20 +146,17 @@ class AMRL_Agent:
 
             # Update reward, Q-table and s_next
             if measure:
-                (reward, done) = self.env.step(action)
-                (obs, cost) = self.env.measure()
+                obs, reward, done, truncated, info = self.env.step((action, measure))
                 self.update_TransTable(s_current, obs, action)
                 self.measurements_taken += 1
                 s_next = obs
             else:
-                (reward, done) = self.env.step(action)
+                _, reward, done, truncated, info = self.env.step((action, measure))
                 s_next = self.guess_current_State(s_current, action)
 
             self.update_QTable(s_current, action, measure, s_next, reward, done)
             s_current = s_next
-            self.currentReward += (
-                reward - self.measureCost * measure
-            )  # this could be cleaner...
+            self.currentReward += reward
             self.steps_taken += 1
         if not done:
             print("max nmbr of steps exceded!")

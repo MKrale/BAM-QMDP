@@ -241,16 +241,16 @@ def get_env(seed=None):
         StateSize, ActionSize, s_init = 500, 6, -1
         if MeasureCost == -1:
             MeasureCost = MeasureCost_Taxi_default
-        env = ActiveMeasurementWrapper(env, initial_state=s_init)
-        env = RecordVideo(
-            env,
-            video_folder="videos",
-            name_prefix="training",
-            episode_trigger=lambda x: x % 100 == 0,
-            video_length=10000,
-            disable_logger=True,
-            fps=10,
-        )
+        # env = ActiveMeasurementWrapper(env, initial_state=s_init)
+        # env = RecordVideo(
+        #     env,
+        #     video_folder="videos",
+        #     name_prefix="training",
+        #     episode_trigger=lambda x: x % 100 == 0,
+        #     video_length=10000,
+        #     disable_logger=True,
+        #     fps=10,
+        # )
     elif env_name == "CliffWalking":
         env = gym.make("CliffWalking-v0", render_mode="rgb_array", is_slippery=True)
         StateSize, ActionSize, s_init = 37, 4, 36
@@ -323,16 +323,15 @@ def get_env(seed=None):
         return
 
     env = ActiveMeasurementWrapper(env)
-
     env = RecordVideo(
         env,
         video_folder="videos",
         name_prefix="training",
-        # episode_trigger=lambda x: x < 15,
+        # episode_trigger=lambda x: x == 0,
+        # video_length=5000,
         disable_logger=True,
-        # fps=4,
+        fps=10,
     )
-    # ENV = wrapper(env, StateSize, ActionSize, MeasureCost, s_init)
     args.m_cost = MeasureCost
 
     return env, StateSize, ActionSize, MeasureCost, s_init
@@ -348,10 +347,24 @@ def get_agent(seed=None):
 
     ENV, StateSize, ActionSize, MeasureCost, InitialState = get_env(seed)
     if algo_name == "AMRL":
-        agent = amrl.AMRL_Agent(ENV, turn_greedy=True)
+        agent = amrl.AMRL_Agent(
+            ENV,
+            StateSize=StateSize,
+            ActionSize=ActionSize,
+            MeasureCost=MeasureCost,
+            InitialState=InitialState,
+            turn_greedy=True,
+        )
     # AMRL-Q, alter so it is completely greedy in last steps.
     elif algo_name == "AMRL_greedy":
-        agent = amrl.AMRL_Agent(ENV, turn_greedy=False)
+        agent = amrl.AMRL_Agent(
+            ENV,
+            StateSize=StateSize,
+            ActionSize=ActionSize,
+            MeasureCost=MeasureCost,
+            InitialState=InitialState,
+            turn_greedy=False,
+        )
     # BAM_QMDP, named Dyna-ATMQ in paper. Variant with no offline training
     elif algo_name == "BAM_QMDP":
         agent = BAM_QMDP(
