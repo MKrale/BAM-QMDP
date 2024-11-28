@@ -51,6 +51,7 @@ from gymnasium.envs.toy_text.frozen_lake import generate_random_map
 # Environment wrappers
 from AM_Gyms.AM_Env_wrapper import AM_ENV as wrapper
 from AM_Gyms.AM_Env_wrapper import AM_Visualiser as visualiser
+from AM_Gyms.ActiveMeasurementWrapper import ActiveMeasurementWrapper
 
 # from Baselines.ACNO_generalised.ACNO_ENV import ACNO_ENV
 
@@ -234,21 +235,13 @@ def get_env(seed=None):
                 is_slippery=False,
                 render_mode="rgb_array",
             )
-
-        env = RecordVideo(
-            env,
-            video_folder="videos",
-            name_prefix="training",
-            # episode_trigger=lambda x: x % 50 == 0,
-            disable_logger=True,
-            fps=4,
-        )
         # Taxi environment, as used in AMRL-Q paper. Not used in paper
     elif env_name == "Taxi":
         env = gym.make("Taxi-v3", render_mode="rgb_array")
         StateSize, ActionSize, s_init = 500, 6, -1
         if MeasureCost == -1:
             MeasureCost = MeasureCost_Taxi_default
+        env = ActiveMeasurementWrapper(env, initial_state=s_init)
         env = RecordVideo(
             env,
             video_folder="videos",
@@ -329,10 +322,20 @@ def get_env(seed=None):
         print("Environment {} not recognised, please try again!".format(env_name))
         return
 
-    ENV = wrapper(env, StateSize, ActionSize, MeasureCost, s_init)
+    env = ActiveMeasurementWrapper(env)
+
+    env = RecordVideo(
+        env,
+        video_folder="videos",
+        name_prefix="training",
+        # episode_trigger=lambda x: x < 15,
+        disable_logger=True,
+        # fps=4,
+    )
+    # ENV = wrapper(env, StateSize, ActionSize, MeasureCost, s_init)
     args.m_cost = MeasureCost
 
-    return ENV
+    return env, StateSize, ActionSize, MeasureCost, s_init
 
 
 ######################################################
@@ -343,7 +346,7 @@ def get_env(seed=None):
 # Both final names and previous/working names are implemented here
 def get_agent(seed=None):
 
-    ENV = get_env(seed)
+    ENV, StateSize, ActionSize, MeasureCost, InitialState = get_env(seed)
     if algo_name == "AMRL":
         agent = amrl.AMRL_Agent(ENV, turn_greedy=True)
     # AMRL-Q, alter so it is completely greedy in last steps.
@@ -351,10 +354,24 @@ def get_agent(seed=None):
         agent = amrl.AMRL_Agent(ENV, turn_greedy=False)
     # BAM_QMDP, named Dyna-ATMQ in paper. Variant with no offline training
     elif algo_name == "BAM_QMDP":
-        agent = BAM_QMDP(ENV, offline_training_steps=0)
+        agent = BAM_QMDP(
+            ENV,
+            offline_training_steps=0,
+            StateSize=StateSize,
+            ActionSize=ActionSize,
+            MeasureCost=MeasureCost,
+            InitialState=InitialState,
+        )
     # BAM_QMDP, named Dyna-ATMQ in paper. Variant with 25 offline training steps per real step
     elif algo_name == "BAM_QMDP+":
-        agent = BAM_QMDP(ENV, offline_training_steps=25)
+        agent = BAM_QMDP(
+            ENV,
+            offline_training_steps=25,
+            StateSize=StateSize,
+            ActionSize=ActionSize,
+            MeasureCost=MeasureCost,
+            InitialState=InitialState,
+        )
     # Observe-then-plan agent from ACNO-paper. As used in paper, slight alterations made from original
     elif algo_name == "ACNO_OTP":
         ENV_ACNO = ACNO_ENV(ENV)

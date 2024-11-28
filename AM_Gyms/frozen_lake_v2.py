@@ -12,14 +12,6 @@ from gymnasium.error import DependencyNotInstalled
 from gymnasium.utils import seeding
 
 
-def rgb2gray(rgb):
-    gray = np.dot(rgb[..., :3], [0.2989, 0.5870, 0.1140])
-
-    # Stack grayscale values across the RGB channels
-    gray_rgb = np.stack((gray, gray, gray), axis=-1)
-    return gray_rgb
-
-
 LEFT = 0
 DOWN = 1
 RIGHT = 2
@@ -338,11 +330,9 @@ class FrozenLakeEnv_v2(Env):
             pygame.display.update()
             self.clock.tick(self.metadata["render_fps"])
         elif mode == "rgb_array":
-            return rgb2gray(
-                np.transpose(
-                    np.array(pygame.surfarray.pixels3d(self.window_surface)),
-                    axes=(1, 0, 2),
-                )
+            return np.transpose(
+                np.array(pygame.surfarray.pixels3d(self.window_surface)),
+                axes=(1, 0, 2),
             )
 
     @staticmethod

@@ -23,11 +23,22 @@ class BAM_QMDP:
     #######################################################
 
     def __init__(
-        self, env: AM_ENV, epsilon=0.0, nmbr_particles=100, offline_training_steps=0
+        self,
+        env: AM_ENV,
+        StateSize,
+        ActionSize,
+        MeasureCost,
+        epsilon=0.0,
+        nmbr_particles=100,
+        offline_training_steps=0,
+        InitialState=-1,
     ):
         # Environment arguments:
         self.env = env
-        self.StateSize, self.ActionSize, self.MeasureCost, self.s_init = env.get_vars()
+        self.StateSize = StateSize
+        self.ActionSize = ActionSize
+        self.MeasureCost = MeasureCost
+        self.s_init = InitialState
 
         self.StateSize = self.StateSize + 1  # Adding a Done-state
         self.doneState = self.StateSize - 1
@@ -169,16 +180,16 @@ class BAM_QMDP:
                 or self.steps_taken > self.max_steps_without_measuring
             )
 
-            # 4: Take Action:
+            # 4: Get Action:
             if np.random.rand() < self.epsilon:
                 action = m.floor(np.random.randint(self.ActionSize))
                 measure = True
-            (reward, self.is_done) = self.env.step(action)
-            cost = 0
 
             # 5: Measure
             if measure:
-                s_next, cost = self.env.measure()
+                s_next, reward, self.is_done, truncated, info = self.env.step(
+                    (action, measure)
+                )
 
                 next_action_known = False
                 self.measurements_taken += 1
@@ -192,16 +203,19 @@ class BAM_QMDP:
 
                 # 7: Update P:
                 self.update_T(s, b_next, action, self.is_done)
+            else:
+                _, reward, self.is_done, truncated, info = self.env.step(
+                    (action, measure)
+                )
 
-                # 8: Update Q
-
+            # 8: Update Q
             self.update_Q_lastStep_only(s, action, reward, isDone=self.is_done)
 
             # 9: Update variables for next step:
 
             history.append((s, action))
             s = b_next
-            self.episodeReward += reward - cost
+            self.episodeReward += reward
             self.steps_taken += 1
             self.totalSteps += 1
 
