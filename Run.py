@@ -82,13 +82,13 @@ nmbr_runs = int(args.nmbr_runs)
 file_name = args.f
 rep_name = args.rep
 remake_env_opt = True
-if args.env_remake in ["False", "false", 0]:
+if args.env_remake in ["False", "false", "0"]:
     remake_env_opt = False
 doSave = True
-if args.save in ["False", "false", 0]:
+if args.save in ["False", "false", "0"]:
     doSave = False
 record_videos = False
-if args.record_videos in ["True", "true", 1]:
+if args.record_videos in ["True", "true", "1"]:
     record_videos = True
 video_directory = args.video_directory
 video_prefix = args.video_prefix
