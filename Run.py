@@ -240,7 +240,12 @@ for run in range(nmbr_runs):
         )
     )
     if remake_env and run < nmbr_runs - 1:
-        agent = get_agent(run + 1)
+        env, InitialState, default_measure_cost, remake_env = get_env(
+            env_name, env_gen, env_variant, env_size, remake_env_opt, seed=run + 1
+        )
+        if measure_cost == -1:
+            measure_cost = default_measure_cost
+        agent = get_agent(env, algo_name, measure_cost, InitialState)
 
 print(
     "Agent Done! ({0} runs in {1} s, with average reward {2}, steps {3}, measures {4})\n\n".format(
