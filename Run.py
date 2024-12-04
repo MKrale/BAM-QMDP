@@ -198,28 +198,50 @@ nmbr episodes per run: {}.
 )
 
 
-for i in range(nmbr_runs):
+for run in range(nmbr_runs):
     t_this_start = t.perf_counter()
-    (r_tot, rewards[i], steps[i], measures[i]) = agent.run(nmbr_eps, True)
-    rewards_avg[i], steps_avg[i], measures_avg[i] = (
-        np.average(rewards[i]),
-        np.average(steps[i]),
-        np.average(measures[i]),
+    # (r_tot, rewards[i], steps[i], measures[i]) = agent.run(nmbr_eps, True)
+
+    agent.init_run_variables()
+    # execute episodes for this run
+    for episode in range(nmbr_eps):
+        log_nmbr = 100
+        if episode > 0 and episode % log_nmbr == 0:
+            print(
+                "{} / {} episodes complete (current avg reward = {}, nmbr steps = {}, nmbr measures = {})".format(
+                    episode,
+                    nmbr_eps,
+                    np.average(rewards[run][(episode - log_nmbr) : episode]),
+                    np.average(steps[run][(episode - log_nmbr) : episode]),
+                    np.average(measures[run][(episode - log_nmbr) : episode]),
+                )
+            )
+            # debugging:
+            # agent.print_info()
+        rewards[run][episode], steps[run][episode], measures[run][episode] = (
+            agent.run_episode(episode, nmbr_eps)
+        )
+
+    rewards_avg[run], steps_avg[run], measures_avg[run] = (
+        np.average(rewards[run]),
+        np.average(steps[run]),
+        np.average(measures[run]),
     )
     t_this_end = t.perf_counter()
     if doSave:
-        export_data(rewards[: i + 1], steps[: i + 1], measures[: i + 1], t_start)
+        export_data(rewards[: run + 1], steps[: run + 1], measures[: run + 1], t_start)
     print(
         "Run {0} done with average reward {2}! (in {1} s, with {3} steps and {4} measurements avg.)\n".format(
-            i + 1,
+            run + 1,
             t_this_end - t_this_start,
-            rewards_avg[i],
-            steps_avg[i],
-            measures_avg[i],
+            rewards_avg[run],
+            steps_avg[run],
+            measures_avg[run],
         )
     )
-    if remake_env and i < nmbr_runs - 1:
-        agent = get_agent(i + 1)
+    if remake_env and run < nmbr_runs - 1:
+        agent = get_agent(run + 1)
+
 print(
     "Agent Done! ({0} runs in {1} s, with average reward {2}, steps {3}, measures {4})\n\n".format(
         nmbr_runs,

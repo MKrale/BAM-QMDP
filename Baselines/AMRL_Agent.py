@@ -36,9 +36,9 @@ class AMRL_Agent:
         self.df = 0.95
 
         # Create all episode and run-specific variables
-        self.reset_Run_Variables()
+        self.init_run_variables()
 
-    def reset_Run_Variables(self):
+    def init_run_variables(self):
         # Variables for one run
         self.QTable = np.zeros((self.StateSize, self.ActionSize, self.MeasureSize))
         self.QTable[:, :, 1] = self.m_bias
@@ -51,14 +51,13 @@ class AMRL_Agent:
         self.TriesTable = np.zeros((self.StateSize, self.ActionSize, self.StateSize))
         self.totalReward = 0
         # Variables for one epoch
-        self.reset_Epoch_Vars()
+        self.init_episode_variables()
 
-    def reset_Epoch_Vars(self):
+    def init_episode_variables(self):
         self.currentReward = 0
         self.steps_taken = 0
         self.measurements_taken = 0
         self.env.reset()
-        self.totalReward += self.currentReward
         # TODO: add variable to keep track of 'actual reward' without costs, and see how this gets effected
 
     def update_TransTable(self, s1, s2, action):
@@ -127,8 +126,13 @@ class AMRL_Agent:
             np.random.randint(0, self.MeasureSize),
         )
 
-    def train_epoch(self):
+    def run_episode(self, episode, total_episodes):
         """Training algorithm of AMRL as given in paper"""
+        if self.turn_greedy and episode / total_episodes > self.greedy_perc:
+            self.be_greedy = True
+
+        self.init_episode_variables()
+
         s_current = self.s_init
         done = False
         while not done:
@@ -161,24 +165,8 @@ class AMRL_Agent:
         if not done:
             print("max nmbr of steps exceded!")
 
-        # Reset after epoch, return reward and #steps
         self.totalReward += self.currentReward
-        (rew, steps, ms) = self.currentReward, self.steps_taken, self.measurements_taken
-        self.reset_Epoch_Vars()
-        return (rew, steps, ms)
+        return self.currentReward, self.steps_taken, self.measurements_taken
 
-    def run(self, nmbr_epochs, get_intermediate_results=False):
-        self.reset_Run_Variables()
-        rewards, steps, ms = (
-            np.zeros((nmbr_epochs)),
-            np.zeros((nmbr_epochs)),
-            np.zeros((nmbr_epochs)),
-        )
-        for i in range(nmbr_epochs):
-            rewards[i], steps[i], ms[i] = self.train_epoch()
-            if self.turn_greedy and i / nmbr_epochs > self.greedy_perc:
-                self.be_greedy = True
-        # print((self.TransTable, self.QTriesTable, self.QTable))    # Debug stuff
-        if get_intermediate_results:
-            return (self.totalReward, rewards, steps, ms)
-        return self.totalReward
+    def print_info(self):
+        print((self.TransTable, self.QTriesTable, self.QTable))  # Debug stuff

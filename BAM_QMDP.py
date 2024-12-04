@@ -137,7 +137,7 @@ class BAM_QMDP:
     ###                 RUN FUNCTIONS:                  ###
     #######################################################
 
-    def run_episode(self):
+    def run_episode(self, episode, total_episodes):
         "Performes one episode of BAM-QMPD algorithm."
         # Initialise all variables:
         self.init_episode_variables()
@@ -228,48 +228,20 @@ class BAM_QMDP:
             self.train_offline()
 
         self.totalReward += self.episodeReward
-        returnVars = (self.episodeReward, self.steps_taken, self.measurements_taken)
-        return returnVars
+        return (self.episodeReward, self.steps_taken, self.measurements_taken)
 
-    def run(
-        self, nmbr_episodes, get_full_results=False, print_info=False, logmessages=True
-    ):
-        "Performs the specified number of episodes of BAM-QMDP."
-        self.init_run_variables()
-        epreward, epsteps, epms = (
-            np.zeros((nmbr_episodes)),
-            np.zeros((nmbr_episodes)),
-            np.zeros((nmbr_episodes)),
-        )
-        for i in range(nmbr_episodes):
-            log_nmbr = 100
-            if i > 0 and i % log_nmbr == 0 and logmessages:
-                print(
-                    "{} / {} runs complete (current avg reward = {}, nmbr steps = {}, nmbr measures = {})".format(
-                        i,
-                        nmbr_episodes,
-                        np.average(epreward[(i - log_nmbr) : i]),
-                        np.average(epsteps[(i - log_nmbr) : i]),
-                        np.average(epms[(i - log_nmbr) : i]),
-                    )
-                )
-
-            epreward[i], epsteps[i], epms[i] = self.run_episode()
-
-        if print_info:
-            print(
-                """
+    def print_info(self):
+        "Print info for debugging, can be run from Run.py"
+        print(
+            """
 Run complete: 
 Alpha table: {}
 QTable: {}
 Rewards Table: {}           
-            """.format(
-                    self.alpha, self.QTable, self.QTableRewards
-                )
+        """.format(
+                self.alpha, self.QTable, self.QTableRewards
             )
-        if get_full_results:
-            return (self.totalReward, epreward, epsteps, epms)
-        return self.totalReward
+        )
 
     #######################################################
     ###                 HELPER FUNCTIONS:               ###
