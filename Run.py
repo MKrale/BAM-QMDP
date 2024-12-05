@@ -113,7 +113,6 @@ if record_videos:
         # episode_trigger=lambda x: x % 2 == 0,
         # specify video length for videos to span multiple episodes:
         # video_length=5000,
-        fps=10,
     )
 
 agent = get_agent(env, algo_name, measure_cost, InitialState)
