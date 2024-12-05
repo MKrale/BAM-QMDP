@@ -105,7 +105,7 @@ def get_env(env_name, env_gen, env_variant, env_size, remake_env_opt, seed=None)
         default_measure_cost = 0.05
     # Standard OpenAI Gym blackjack environment. Not used in paper
     elif env_name == "Blackjack":
-        env = BlackjackEnv()
+        env = BlackjackEnv(render_mode="rgb_array")
         InitialState = -1
         default_measure_cost = 0.05
     elif env_name == "KOutOfN":

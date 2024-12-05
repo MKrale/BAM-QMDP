@@ -7,6 +7,7 @@ class BlackjackEnv(gym.ObservationWrapper):
     def __init__(self, **kwargs):
         self.env = gym.make(
             "Blackjack-v1",
+            **kwargs,
         )
         super().__init__(self.env)
         # 11 possible dealer hand * 32 possible player hand * 2 for usable ace = 704
