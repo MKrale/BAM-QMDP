@@ -1,6 +1,5 @@
 import numpy as np
 import gymnasium as gym
-from gymnasium.wrappers import RecordVideo
 
 # Environments
 from AM_Gyms.NchainEnv import NChainEnv
