@@ -62,3 +62,4 @@ class TextEpisodeRecorder(gym.Wrapper):
         self.file = open(full_file_name, "a")
 
         self.recording = True
+        self.record_frame()

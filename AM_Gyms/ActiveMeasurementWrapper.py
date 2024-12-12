@@ -71,6 +71,8 @@ class ActiveMeasurementWrapper(gym.Wrapper):
                 return desaturate_rgb(img, 0.65)
             else:
                 return img
+        elif self.env.render_mode in ["ansi", "text"]:
+            return f"Measure action {self.last_step_measured}:\n" + self.env.render()
         self.env.render()
 
     def get_vars(self):

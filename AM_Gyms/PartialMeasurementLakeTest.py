@@ -30,13 +30,14 @@ def measurement_cost(measurement):
 
 
 env = FrozenLakeEnv_v2(render_mode="ansi", map_name="4x4")
+env = ActiveMeasurementWrapper(
+    env, observation_function=obs_function, measurement_cost=measurement_cost
+)
 env = TextEpisodeRecorder(env, folder="./episodes")
 for i in range(50):
     termination, truncation = False, False
     _ = env.reset(seed=123)
     while not (termination or truncation):
-        obs, rew, termination, truncation, info = env.step(env.action_space.sample())
-
-# env = ActiveMeasurementWrapper(
-#     env, observation_function=obs_function, measurement_cost=measurement_cost
-# )
+        obs, rew, termination, truncation, info = env.step(
+            (env.action_space.sample(), (True, True))
+        )
