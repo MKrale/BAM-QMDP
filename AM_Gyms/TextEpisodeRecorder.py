@@ -14,6 +14,11 @@ class TextEpisodeRecorder(gym.Wrapper):
     ):
         super().__init__(env)
 
+        if env.render_mode not in {"text", "ansi"}:
+            raise ValueError(
+                f"Render mode is {env.render_mode}, which is incompatible with TextEpisodeRecorder, should be text or ansi.",
+            )
+
         self.folder = folder
         self.episode_trigger = episode_trigger
         self.name_prefix = name_prefix

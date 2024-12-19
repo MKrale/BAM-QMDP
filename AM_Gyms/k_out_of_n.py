@@ -1,6 +1,6 @@
-import gym
-from gym import spaces
-from gym.utils import seeding
+import gymnasium as gym
+from gymnasium import spaces
+from gymnasium.utils import seeding
 
 
 class KOutOfN(gym.Env):
@@ -15,7 +15,14 @@ class KOutOfN(gym.Env):
     """
 
     def __init__(
-        self, n=5, k=3, smax=4, repair_cost=0.25, break_cost=0.5, max_steps=100
+        self,
+        n=5,
+        k=3,
+        smax=4,
+        repair_cost=0.25,
+        break_cost=0.5,
+        max_steps=100,
+        render_mode=None,
     ):
         self.n = n
         self.k = k
@@ -23,6 +30,7 @@ class KOutOfN(gym.Env):
         self.repair_cost = repair_cost
         self.break_cost = break_cost
         self.max_steps = max_steps
+        self.render_mode = render_mode
 
         # start with all components repaired
         self.components = [0] * self.n
@@ -32,6 +40,8 @@ class KOutOfN(gym.Env):
         # observation space is per component its value
         # but, observations must be integers
         self.observation_space = spaces.Discrete(self.smax**self.n)
+
+        self.last_action = None
 
     # list of components to state integer
     def to_s(self, components: list[int]):
@@ -56,12 +66,14 @@ class KOutOfN(gym.Env):
             a %= 2**i
         return action
 
-    def step(self, action, log=False):
+    def step(self, action):
         action = self.to_action(action)
         done = False
         self.current_step += 1
         if self.current_step == 100:
             done = True
+
+        self.last_action = action
 
         # process action, calculate next state
         next_components = [0] * self.n
@@ -104,13 +116,17 @@ class KOutOfN(gym.Env):
             # positive reward for at least k functioning components
             reward += 1
 
-        return self.to_s(self.components), reward, done, {}
+        return self.to_s(self.components), reward, done, False, {}
 
-    def reset(self, seed=None):
+    def reset(self, seed=None, options=None):
         super().reset(seed=seed)
 
         # start with all components repaired
         self.components = [0] * self.n
         self.current_step = 0
 
-        return self.to_s(self.components)
+        return self.to_s(self.components), None
+
+    def render(self):
+        # assume ansi, so this returns a string
+        return f"Action {str(self.last_action)}: {str(self.components)}\n"

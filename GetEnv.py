@@ -112,7 +112,7 @@ def get_env(env_name, env_gen, env_variant, env_size, remake_env_opt, seed=None)
         n = 4
         if env_size != 0:
             n = env_size
-        env = KOutOfN(n=n, smax=smax)
+        env = KOutOfN(n=n, smax=smax, render_mode="ansi")
         default_measure_cost = 0.05
         InitialState = 0
     else:
