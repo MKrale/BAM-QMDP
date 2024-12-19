@@ -9,6 +9,7 @@ import datetime
 import json
 import argparse
 from gymnasium.wrappers import RecordVideo
+from AM_Gyms.TextEpisodeRecorder import TextEpisodeRecorder
 
 from GetEnv import get_env
 from GetAgent import get_agent
@@ -59,6 +60,11 @@ parser.add_argument(
     help="Save videos of every episode that is a power of 3 until 1000 and then every 1000 episodes.",
 )
 parser.add_argument(
+    "-record_text",
+    default=False,
+    help="Save text output of every episode that is a power of 3 until 1000 and then every 1000 episodes.",
+)
+parser.add_argument(
     "-video_directory",
     default="videos",
     help="Directory to store the videos of the episodes in (default: ./videos).",
@@ -90,6 +96,9 @@ if args.save in ["False", "false", "0"]:
 record_videos = False
 if args.record_videos in ["True", "true", "1"]:
     record_videos = True
+record_text = False
+if args.record_text in ["True", "true", "1"]:
+    record_text = True
 video_directory = args.video_directory
 video_prefix = args.video_prefix
 
@@ -114,6 +123,9 @@ if record_videos:
         # specify video length for videos to span multiple episodes:
         # video_length=5000,
     )
+if record_text:
+    env = TextEpisodeRecorder(env, folder=video_directory, name_prefix=video_prefix)
+
 
 agent = get_agent(env, algo_name, measure_cost, InitialState)
 
