@@ -1,6 +1,5 @@
 import numpy as np
-
-from AM_Gyms.AM_Env_wrapper import AM_ENV
+from gymnasium import Env
 
 
 def build_dictionary(statesize, actionsize, array: np.ndarray = None):
@@ -17,7 +16,7 @@ def build_dictionary(statesize, actionsize, array: np.ndarray = None):
 class ModelLearner:
     """Class for learning ACNO-MDP"""
 
-    def __init__(self, env: AM_ENV, df=0.90):
+    def __init__(self, env: Env, df=0.90):
         # Set up AM-environment
         self.env = env
 
